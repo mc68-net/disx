@@ -1,0 +1,342 @@
+
+DISX4 - Full-Screeen Interactive Disassembler
+by Bruce Tomlin - bruce@xi6.com
+
+
+DISX4 is a multi-CPU disassembler for various vintage CPU architectures, mostly 8-bit. It will keep track of live changes to label references.
+
+
+What disx4 is intended for:
+- making a decent disassembly that can be saved as a .asm file where you can tweak the code
+- not for making the prefect disassembly that needs no further touching
+
+Cool things that it doesn't do:
+- track RAM references
+- let you add your own comments
+- deal with split references (high byte in one instruction, low byte in another)
+
+Other things that it doesn't do:
+- combine separate binary files (if your code comes from multiple ROMs, you will need to create a combined binary first)
+
+
+=== BULDING ===
+
+This uses a standard makefile, so use the "make" command to build it. It should work in a standard Linux or MacOS environment with C++ developer tools installed. If this isn't sufficient information, then google for "how to use make".
+
+On some systems, if you have not previously used the compiler, make might have trouble finding it. Consult the documentation of your OS distribution for more information.
+
+If you plan on modifying the code, you might want to use "make depend" first. This generates a file named ".depend" with make dependencies for the .h files. That way, when you change a common .h file, all files that use it will be automatically rebuilt.
+
+
+=== REFERENCES ===
+
+Each line of disassembly can have one external reference, either code or data both. Some CPUs have 16-bit immediate instructions which can potentially be either. This will be used for creating labels, and for code tracing. Word or longword data lines will only allow a reference from the first word on the line.
+
+Label creation can be suppressed to certain addresses by using the Control-R command on the address.
+
+Address 0x0000 is specifically prevented from generating a reference, because it is almost never used as such.
+
+
+=== TRACING ===
+
+If the label is a code reference, the T command can disassemble into referenced code after finishing the current block of code. This can quickly disasssemble large ranges of code, but it can also be misled by "tricks" like subroutines that pop the return address, read data from that address, and then put it back before returning.  Note that the Z-80 series is particularly vulnerable to blank (0x20) characters causing bogus code references. The "rip-stop" functionality attempts to detect the most obvious situations.
+
+
+=== UNDO ===
+
+There is minimal undo support, in the form of one saved state. It is automacially saved by the [add list here] commands, and manually by the control-U key command. To use it, use the shift-U key command. But it's really not in a useful state right now.
+
+
+=== COMMAND LINE ===
+
+Usage:
+    disx4 [options] [binfile]
+
+Options:
+    -c cpu         select default CPU type
+    -c ?           show list of supported CPU types
+    -b xxxx        hexidecimal base address
+    -s xxxx        hexidecimal size of binary data
+    -o xxxx        hexidecimal offset to start of data in file
+    -a             create binfile.asm and exit
+    -l             create binfile.lst and exit
+    -!             don't load binfile.ctl
+
+If started up with no parameters, it will show an empty file, and the selected CPU type will be undefined. If "binfile.ctl" is loaded, its saved -b, -s, and -o parameters are used unless overridden.
+
+"-c cpu" will select the default and current CPU types in a new .ctl file.
+
+"-c ?" will show a list of supported CPU types.
+
+"-b xxxx" will specify the load address of the first byte
+
+"-s xxxx" will specify the maximum size of the code image to be loaded.
+
+"-o xxxx" will specify the offset in the file to the first byte of the code image. This allows skipping a header.
+
+"-!" will prevent automatic loading of "binfile.ctl". This will ignore any existing work in "binfile.ctl".
+
+"-a" and "-l" will generate a .asm and/or .lst file, then return to the command line.
+
+=== NAVIGATION KEYS ===
+
+Up-arrow        Move up one line
+Down-arrow      Move down one line
+
+Home            Move to start of image
+End             Move to end of image
+
+Page Up         Scroll down a page at a time, while staying on the same screen line
+Page Down       Scroll up a page at a time, while staying on the same screen line
+Space bar       Same as Page Down
+
+Control-B       Move to top of screen, then move up a page at a time
+Control-D       Move to bottom of screen, then move down a page at a time
+
+:               Start a text command
+/               Search forward - searches are case insensitive and collapse all spaces together
+?               Search backward
+
+
+=== SINGLE-KEY COMMANDS ===
+
+0 - 9           Digit keys let you specify a count of 0-99 for some commands.
+                The escape key will clear the count. Some commands have a maximum count.
+
+x               (no count) Disasssemble as raw data (the default state)
+a               (max count 40) Disassemble as ASCII
+b               (max count 32) Disassemble as single bytes
+h               (max count 32) Disassemble as hex bytes with no formatting'
+w               (max count 20) Disassemble as 2-byte words
+shift-W         (max count 20) Disassemble as reverse 2-byte words
+ctrl-W          (max count 1)  Disassemble as word address - 1 for 6502 jump tables
+\               (max count 16) Disassemble as 4-byte longwords
+| (shift \)     (max count 16) Disassemble as reverse 4-byte longwords
+d               (max count 20) Disassemble as decimal words (unsigned)
+shift-D         (max count 16) Disassemble as decimal longwords (signed)
+_               (max count 40) Disassemble as EBCDIC
+I               (max count 16) Disassemble as binary, 0x55 = 01010101B
+X               (max count 16) Disassemble as visible binary, 0x55 = _X_X_X_X
+O               (max count 16) Disassemble as visible binary, 0x55 = O_O_O_O_
+                See "xobits.h"/"xobits.s" for the "visible binary" equates.
+*               Repeat previous data format command with same count
+( and )         Expand or shrink the size of a line of data.
+
+o               Dissasemble current word as a position-independent offset in a table starting
+                at the most recent label. This is commonly found on certain architectures such
+                as 68k. If the target address has no label, a label will be created. If the
+                target is already disassembled as code, a code label will be created.
+
+c               Disassemble current instruction as code
+                Ignored if already disassembled as current CPU, or if an illegal instruction
+shift-C         Disassemble instructions until unconditional branch or illegal instruction
+T               Trace disassemble from current instruction, same rules as shift-C except
+                that all code references are followed and disassembled as well.
+
+control-L       Toggle label type at this address between none, data, and code. Note that
+                if the current line is a "EQU $-n" line, this will only remove the label. You
+                must use "X" to break up the instruction, change the label state, then fix it
+                with "c" afterward.
+^               Toggle label type at referenced address.
+control-R       Toggle no-reference attribute for selected address, to prevent labels from
+                being automatically created. This is useful for certain "magic" numbers like
+                0x1000, and almost anything at address 0000-00FF.
+
+shift-L         Toggles a pre-instruction blank line at this address.
+
+control-U       Save current state for the next undo.
+shift-U         Undo to last saved state. State is automatically saved before C and T commands.
+
+@               Go to the reference address in the current line.
+< and >         Go backward and forward along "@" or ":xxxx" usages.
+[ and ]         Go backward and forward to the next defined label.
+
+!               Search the entire code for any reference to the label at the current line,
+                and delete the label if not found.
+
+` (backquote)   Re-center the selected line towards the middle of the screen. This is useful
+                when at the very top or bottom of the screen and you need to see a few more
+                lines.
+
+
+=== TEXT COMMANDS ===
+
+While typing in the command line:
+
+Backspace or DEL  Delete last entered character, or exit input mode if at start of line.
+Carriage return   Finish line and start executing it.
+Escape            Abort current line and exit input mode.
+Ctrl-U / Ctrl-X   Erase current line but stay in input mode.
+
+
+Command list:
+
+quit / q        Exit the program. If the disassembly status has been changed, you must
+                use ":q!" to override the changes, or save first with ":w".
+
+cpu <cputype>   Sets the current CPU type for disassembly. If defcpu has not yet been set,
+                it will also be set to this CPU type.
+
+defcpu <cputype>
+                Sets the default CPU type that will be used for such things as number syntax
+                (0FFH vs $FF), and default endian byte order for pseudo-ops like DW.
+
+list            Create the file "binfile.lst" as a listing-style file of the whole image.
+
+asm             Create the file "binfile.asm" as a source-style file of the whole image.
+
+save / w        Save the current disassembly state into "binfile.ctl".
+
+load / l <file> [!] [Bxxxx] [Sxxxx] [Oxxxx]
+                Load the binary file.
+                - If "file.ctl" exists, it will be used.
+                - If the file name is a single "-" character, the current file
+                  will be reloaded.
+                - If ! is used, the disassembly state in "file.ctl" is
+                  completely ignored.
+                - The B/S/O parameters will override what is stored in the .ctl
+                  file, but will not be saved into the .ctl file until an actual
+                  save command is done. There must not be a blank before the
+                  xxxx address. Changing Oxxxx will almost certainly cause all
+                  saved disassembly information to be incorrect.
+                  Warning: if the parameters result in a smaller data area,
+                  some disassembly state could be lost!
+
+tabs [!] [n] [n] [n] [n]
+                Without any parameters, shows the current column widths.
+                With parameters, sets column widths.
+                The four columns are listing address, hex object code, label,
+                and opcode. The default values are: 8 16 8 8.
+                "!" causes listing files to generate hard (0x09) tabs. When
+                this is used, all column widths must be multiples of 8.
+
+xxxx            A hexadecimal number goes to that address in the image. ":0"
+                should always move to the start of the image, just like the
+                Home key.
+
+$               Moves to the end of the image, just like the End key.
+
+rst [########]  Sets extra instruction bytes used by the 8080/Z80 RST instruction.
+                An 8 digit number sets all the values at once. A value of 1 causes RST
+                instructions to disassemble as two bytes, and a value of 9 causes RST
+                instructions do disassemble as ten bytes. Default is 00000000.
+                If no parameter is provided, it shows the current state.
+                Note that changing this will not automatically re-scan the code. You
+                must go to each RST instruction and re-disassemble it with the 'c' key.
+
+
+=== RIP-STOP ===
+
+An auto-tracing disassembler can be very powerful, and with great power comes great responsibility! Each instruction set has its own quirks when it reaches data that isn't code. The problem is that many bogus labels can get created, which are a pain to clean up, and could run wild over even more data. Each CPU disassembler can report that a given instruction is suspicious, and to stop tracing. The C command stops immediately, and the T command stops the current branch. To manually disassemble an offending instruction, you can still use the lowercase "c" command.
+
+So far this is mostly in the Z-80 and 6502 disassemblers.
+
+Some trigger conditions for the Z-80 disassembler are:
+- three NOP instructions in a row (repeated 0x00)
+- two RST 38H instructions in a row (repeated 0xFF)
+- LD r,r where r is the same register
+- repated LD r,r with the same pair of registers
+- branches with an offset of 0x00 or 0xFF
+- DJNZ with a forward offset
+
+Some trigger conditions for the 6502 disassembler are:
+- two BRK instructions in a row (string of 0x00)
+- branches with an offset of 0xFF
+- the rip-stop code also tries to detect "always branch" conditions such as BEQ+BNE
+
+
+=== MISCELLANEOUS STUFF ===
+
+* If the .bin file has been moved to a different directory, the path saved in the .ctl file will not match. There will still be an attempt to load the .ctl file from the same directory as the .bin file. (NOTE: details of this behavior need to be confirmed)
+
+* The 8048 disassembler has to guess the SEL MB0/MB1 flag for the JMP and CALL instruction bank. This is done by searching backwards as long as there's contiguous 8048 code. If none is found, it defaults to the bank at the current address.
+
+* Not all of the disassembler cores have been thoroughly tested. Some (ARM and PIC) were never quite finished.
+
+* The PIC disassembler creates labels using the byte address rather than the word address.
+
+* The PIC disassembler requires the binary be in little-endian format (low instruction byte first).
+
+* The 78K0 disassembler is mostly working, but the code that I had hoped used it apparently didn't.
+
+
+=== DISASSEMBLER STATUS ===
+
+This is a rough estimation of the quality of each disassembler:
+
+1 = early attempt, not even sure if all opcodes are correct
+2 = actual code has been disassembled and makes some sense, but no way to re-assemble
+3 = it generates code that has been re-assembled, but not a lot of it
+4 = disassembled code has been regularly re-assembled and compared
+5 = it has been used a lot, but some sub-types might be less than perfect
+
+5  disz80.cpp    - heavy usage and re-assemblies, but does not support 8080-style mnemonics
+5  dis6502.cpp   - 6502 tested with many re-assemblies, 65816 barely tested
+4  dis68HC11.cpp - tested with many re-assemblies, but no 6303 examples
+5  dis6809.cpp   - heavy usage and re-assmblies
+5  dis68k.cpp    - heavy usage and re-assmblies
+4  dis8051.cpp   - it's been tested with many re-assemblies
+3  dis8048.cpp   - tested with re-assemblies, but suffers from using bank selects
+3  disz8.cpp     - it's been tested on a few re-assemblies
+2  dis1802.cpp   - sort of works, but few samples and it suffers from split words
+2  disf8.cpp     - sort of works, not enough examples
+2  dispic.cpp    - sort of works, but better testing needed for non-byte-oriented systems
+1  disarm.cpp    - still needs a lot of work, can suffer from split words
+2  dis7810.cpp   - only tested on one code example
+1  dis78K0.cpp   - the code that I thought was 78K0 turned out to be 78K3, so no examples
+2  dis78K3.cpp   - only tested on one code example
+
+
+=== Q AND A ===
+
+Q: Why is it version "4"?
+A: Because I've had disassemblers for a very long time. Version "2" added a configuration file. It was very detailed, and it could do a good job, but it was a real pain to use. Version 3 was rewriting everything to use C++ inheritance. But it was still such a pain to use that all this time I had been wanting to do an interactive disassembler "someday". Once I finally started writing code, it only took about two months to become functional. The V3 disassembler cores were then ported to V4.
+
+Q: Why use ncurses and not a real windowing system?
+A: Because it is more portable between Unix-like operating systems. I kept all the use of ncurses to a single .cpp file so that there should only be one layer to replace later. Text UIs are underrated.
+
+Q: Why only one level of undo?
+A: Because it's better than zero levels, and doing more would be a lot of work. Actually, I haven't really used it yet, so it's mostly there as a placeholder.
+
+Q: It crashed and now I can't see what I'm typing!
+A: When an app using ncurses crashes, it can leave the terminal in an inconvienent state. The command "stty sane" should return things to normal.
+
+REMEMBER, IF IT CRASHES YOU MAY NEED TO 'stty sane' TO GET THE TERMINAL BACK
+
+
+=== HINTS AND TIPS ===
+
+* Sometimes you have a binary of an unknown CPU type. It is very helpful to identify hex opcodes before disassembling so that you know which CPU type to select, and also to know where the hardware-defined entry points are. Sometimes even determining the base address of code can be difficult.
+
+* Common endians, opcodes, and vectors for various CPUs:
+
+LE 8080 - CD xx xx / C3 xx xx / C9 / F5 E5 D5 ... D1 E1 F1 / 11 xx xx / 21 xx xx
+        - reset at 0000, vector entry points at 0008 0010 0018 0020 0028 0030 0038 0066
+LE 6502 - A9 xx / 4C xx xx / 20 xx xx / 60
+        - vector addresses at FFFx
+BE Z8   - D6 xx xx / 8D xx xx / AF
+        - reset at 000C, vector address words at 0000-000B
+LE 8048 - 02 xx xx / 12 xx xx / 83
+        - reset at 0000, interrupt entry points at 0003 0007
+BE 8051 - 02 xx xx / 12 xx xx / 20
+        - reset at 0000, interrupt entry points at 0003 000B 0013 001B 0023
+BE 6800 - BD xx xx / 7E xx xx / 39
+        - vector address words at FFFx
+BE 6809 - BD xx xx / 
+        - vector address words at FFFx
+BE 1802 - Dx / Cx xx xx / 70 / 3x xx / F8 xx By F8 xx Ay
+BE 68000 - 4E56 0000 / 4E5E 4E75
+         - vector addresse longwords at 0000-00FF
+
+* CPUs without 16-bit load instructions are harder to work with because there are no register loads of full addresses. You can still put a label at the address, but the references will have to be manually replaced in the resulting .asm file.
+
+* When you have subroutine calls followed by inline ASCII text or other non-code data that can't disassemble properly, one workaround is:
+
+- use the search function to find one of the bytes of the call instruction ("/ db xxH")
+- use shift-C to convert the subroutine call to code
+- repeat for all such calls
+- code tracing will now automatically stop at the disassembled subroutine call when tracing
+- this is of course not as simple as it sounds
+
+================
+

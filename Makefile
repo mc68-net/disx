@@ -39,7 +39,7 @@ LDLIBS = -lncurses
 zip: all # build everything first to check for errors
 	mkdir -p zip
 	zip -r zip/disx4-$(DATE).zip *.cpp *.c *.h disx*.txt Makefile \
-	equates
+	equates svnrev
 
 
 .PHONY: clean
@@ -62,3 +62,4 @@ depend:
 # note that the "-" at the start means to silently ignore if the file is not found
 -include .depend
 
+# DO NOT DELETE

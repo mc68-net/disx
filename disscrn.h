@@ -73,6 +73,7 @@ private:
     void cmd_key(int key);      // handle single-key command
     void do_cmd_line();         // handle command in 'cmd'
     void do_search(bool fwd);   // do search
+    void do_comment();          // do comment
 
     void push_addr(addr_t addr, addr_t next = 0);// push address to _goto_stk
     addr_t pop_addr();          // pop address from _goto_stk

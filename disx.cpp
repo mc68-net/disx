@@ -131,7 +131,7 @@ void getopts(int argc, char * const argv[])
     }
 
     // if file name is "?", print help
-    if (cmdfname[0] == '?' && cmdfname[1] == 0) {
+    if (cmdfname && cmdfname[0] == '?' && cmdfname[1] == 0) {
         usage();
     }
 

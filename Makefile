@@ -20,6 +20,7 @@ disx: $(OBJS)
 run: all
 	./disx
 
+a: discmt.o
 
 # C compiler target architecture
 #   this is the setting for OS X to create a universal PPC/Intel binary

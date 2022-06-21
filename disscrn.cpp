@@ -1140,12 +1140,6 @@ void DisScrn::do_search(bool UNUSED fwd)
     print_screen();
 }
 
-// =====================================================
-void DisScrn::do_comment()
-{
-    beep();
-}
-
 
 // =====================================================
 // change this line to type = mAscii
@@ -2517,9 +2511,6 @@ void DisScrn::input_key(int key)
                     do_search(key == '/');
                     break;
 
-                case ';':
-                    do_comment();
-
                 default:
                     // shouldn't get here
                     break;
@@ -2658,11 +2649,6 @@ void DisScrn::do_key(int key)
             print_screen();
             break;
 
-        case ';': // start a comment
-            // make sure line is valid for a comment
-            //do_comment
-
-            FALLTHROUGH;
         case ':': // start command line
         case '/': // start search forward
         case '?': // start search backward

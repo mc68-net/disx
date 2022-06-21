@@ -193,4 +193,6 @@ int main(int argc, char * const argv[])
 
     // clean up and exit
     end_screen();
+
+    return 0;
 }

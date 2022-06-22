@@ -2311,6 +2311,7 @@ void DisScrn::do_cmd_mor()
         // add new byte(s) to current run
         rom.set_type(a, typ);
         rom.set_attr_flag(a, ATTR_CONT);
+        rom.clear_attr_flag(a, ATTR_LF0 | ATTR_LF1);
         a++;
     }
 

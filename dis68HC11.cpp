@@ -540,10 +540,10 @@ static const struct InstrRec M68HC11_opcdTable18[] =
 /*1889*/  {""     , iInherent  , 0, 0                 },
 /*188A*/  {""     , iInherent  , 0, 0                 },
 /*188B*/  {""     , iInherent  , 0, 0                 },
-/*188C*/  {"CPY"  , iLImmediate, 0, 0                 }, // 68HC11
+/*188C*/  {"CPY"  , iLImmediate, _HC11, 0                 }, // 68HC11
 /*188D*/  {""     , iInherent  , 0, 0                 },
 /*188E*/  {""     , iInherent  , 0, 0                 },
-/*188F*/  {"XGDY" , iInherent  , 0, 0                 }, // 68HC11
+/*188F*/  {"XGDY" , iInherent  , _HC11, 0                 }, // 68HC11
 
 /*1890*/  {""     , iInherent  , 0, 0                 },
 /*1891*/  {""     , iInherent  , 0, 0                 },
@@ -557,27 +557,27 @@ static const struct InstrRec M68HC11_opcdTable18[] =
 /*1899*/  {""     , iInherent  , 0, 0                 },
 /*189A*/  {""     , iInherent  , 0, 0                 },
 /*189B*/  {""     , iInherent  , 0, 0                 },
-/*189C*/  {"CPY"  , iDirect    , 0, 0                 }, // 68HC11
+/*189C*/  {"CPY"  , iDirect    , _HC11, 0                 }, // 68HC11
 /*189D*/  {""     , iInherent  , 0, 0                 },
 /*189E*/  {""     , iInherent  , 0, 0                 },
 /*189F*/  {""     , iInherent  , 0, 0                 },
 
-/*18A0*/  {"SUBA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A1*/  {"CMPA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A2*/  {"SBCA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A3*/  {"SUBD" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A4*/  {"ANDA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A5*/  {"BITA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A6*/  {"LDAA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A7*/  {"STAA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A8*/  {"EORA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18A9*/  {"ADCA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18AA*/  {"ORAA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18AB*/  {"ADDA" , iIndexedY  , 0, 0                 }, // 68HC11
-/*18AC*/  {"CPY"  , iIndexedY  , 0, 0                 }, // 68HC11
-/*18AD*/  {"JSR"  , iIndexedY  , 0, REFFLAG | CODEREF }, // 68HC11
-/*18AE*/  {"LDS"  , iIndexedY  , 0, 0                 }, // 68HC11
-/*18AF*/  {"STS"  , iIndexedY  , 0, 0                 }, // 68HC11
+/*18A0*/  {"SUBA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A1*/  {"CMPA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A2*/  {"SBCA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A3*/  {"SUBD" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A4*/  {"ANDA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A5*/  {"BITA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A6*/  {"LDAA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A7*/  {"STAA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A8*/  {"EORA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18A9*/  {"ADCA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18AA*/  {"ORAA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18AB*/  {"ADDA" , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18AC*/  {"CPY"  , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18AD*/  {"JSR"  , iIndexedY  , _HC11, REFFLAG | CODEREF }, // 68HC11
+/*18AE*/  {"LDS"  , iIndexedY  , _HC11, 0                 }, // 68HC11
+/*18AF*/  {"STS"  , iIndexedY  , _HC11, 0                 }, // 68HC11
 
 /*18B0*/  {""     , iInherent  , 0, 0                 },
 /*18B1*/  {""     , iInherent  , 0, 0                 },
@@ -591,7 +591,7 @@ static const struct InstrRec M68HC11_opcdTable18[] =
 /*18B9*/  {""     , iInherent  , 0, 0                 },
 /*18BA*/  {""     , iInherent  , 0, 0                 },
 /*18BB*/  {""     , iInherent  , 0, 0                 },
-/*18BC*/  {"CPY"  , iExtended  , 0, 0                 }, // 68HC11
+/*18BC*/  {"CPY"  , iExtended  , _HC11, 0                 }, // 68HC11
 /*18BD*/  {""     , iInherent  , 0, 0                 },
 /*18BE*/  {""     , iInherent  , 0, 0                 },
 /*18BF*/  {""     , iInherent  , 0, 0                 },
@@ -841,7 +841,7 @@ static const struct InstrRec M68HC11_opcdTable1A[] =
 /*1AA0*/  {""     , iInherent,   0, 0                 },
 /*1AA1*/  {""     , iInherent,   0, 0                 },
 /*1AA2*/  {""     , iInherent,   0, 0                 },
-/*1AA3*/  {"CPD"  , iIndexed ,   0, 0                 }, // 68HC11
+/*1AA3*/  {"CPD"  , iIndexed ,   _HC11, 0                 }, // 68HC11
 /*1AA4*/  {""     , iInherent,   0, 0                 },
 /*1AA5*/  {""     , iInherent,   0, 0                 },
 /*1AA6*/  {""     , iInherent,   0, 0                 },

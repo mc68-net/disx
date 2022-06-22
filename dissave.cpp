@@ -5,6 +5,7 @@
 #include "disstore.h"
 #include "disscrn.h"
 #include "discpu.h"
+#include "discmt.h"
 #include "rle.h"
 
 #define MAGIC "dsx4"
@@ -220,6 +221,11 @@ int DisSave::save_file()
 
     // close file
     fclose(f);
+
+    // write comments
+    strcpy(path, rom._fname);
+    strcat(path, ".cmt");
+    cmt.save_comments(path);
 
     return 0;
 }
@@ -614,6 +620,11 @@ ERROR:
         return -1;
     }
 
+    // read comments
+    strcpy(path, rom._fname);
+    strcat(path, ".cmt");
+    cmt.load_comments(path);
+    
     rom.save_undo();
     rom._changed = false;
 

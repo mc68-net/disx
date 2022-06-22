@@ -1,7 +1,7 @@
 # makefile for disx4
 
 # version number for zipfile name
-VERSION=4.0.0
+VERSION=4.1.0
 DATE=$(shell date +%Y-%m-%d)
 
 # get svn info
@@ -9,7 +9,7 @@ DATE=$(shell date +%Y-%m-%d)
 REV=$(shell ./svnrev)
 #REV=r123
 
-OBJS := disx.o disscrn.o disstore.o disline.o dissave.o discpu.o rle.o \
+OBJS := disx.o disscrn.o disstore.o disline.o dissave.o discpu.o discmt.o rle.o \
         disz80.o dis6502.o dis68HC11.o dis6809.o dis68k.o dis8051.o \
         dis8048.o disz8.o dis1802.o disf8.o dispic.o disarm.o dis7810.o dis78K0.o \
         dis78K3.o

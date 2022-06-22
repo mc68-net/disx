@@ -49,7 +49,8 @@ public:
         T_LABEL  = 2, // label
         T_OPCODE = 3, // opcode
         T_PARMS  = 4, // parameters
-        T_NTABS  = 5,
+        T_CMT    = 5, // comments
+        T_NTABS  = 6,
         T_SCRN   = 7, // flag if in screen mode
 
         // bits in line_cols
@@ -64,6 +65,10 @@ public:
         SCRN_COLS = B_ADDR | B_HEX | B_LABEL | B_OPCODE | B_PARMS  | B_SCRN,
         LIST_COLS = B_ADDR | B_HEX | B_LABEL | B_OPCODE | B_PARMS,
         ASM_COLS  =                  B_LABEL | B_OPCODE | B_PARMS,
+
+        // build_line flags
+        BL_NOLABEL   = 1 << 0,  // do not show label
+        BL_NOCOMMENT = 1 << 1,  // do not show comment
     };
 
     static int tabs[T_NTABS];   // values of tab positions
@@ -82,7 +87,7 @@ public:
     // make addr become code
     int make_code(addr_t addr, int &lfref, addr_t &refaddr);
     void build_line(addr_t addr, char *s, const char *opcode,
-                    const char* parms, int ofs = 0) const;
+                    const char* parms, int ofs = 0, int flags = 0) const;
 
     int get_dis_line(addr_t addr, char *s, int &lfref, addr_t &refaddr) const;
     void dis_org(char *s) const;

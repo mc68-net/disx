@@ -3,6 +3,7 @@
 #include "disline.h"
 
 #include "discpu.h"
+#include "discmt.h"
 #include "ctype.h"
 
 
@@ -191,7 +192,7 @@ void DisLine::get_text(const addrline_t addr, char *s) const
                 // found the right line
                 char parms[16];
                 sprintf(parms, "%c-%d", defCpu->_curpc, len - ofs);
-                build_line(ad, s, "EQU", parms, ofs);
+                build_line(ad, s, "EQU", parms, ofs, /*flags=*/ BL_NOCOMMENT);
                 return;
             }
         }
@@ -308,7 +309,7 @@ char *DisLine::add_tab(char *s, int column, bool forceblank) const
 
 // =====================================================
 void DisLine::build_line(addr_t addr, char *s, const char *opcode,
-                         const char* parms, int ofs) const
+                         const char* parms, int ofs, int flags) const
 {
     char label[16] = {0};
 
@@ -381,7 +382,9 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
             strcat(label,":");
         }
 
-        strcat(p, label);
+        if (!(flags & BL_NOLABEL)) {
+            strcat(p, label);
+        }
         p = add_tab(s, T_LABEL, false);
     }
 
@@ -402,11 +405,20 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
     // put parms
     if (line_cols & B_PARMS) {
         strcat(p, parms);
-#if 0 // don't pad the last field!
         p = add_tab(s, T_PARMS, false);
-#else // but still do point to end of line
-        p += strlen(p);
-#endif
+    }
+
+// -----------------------------------------------------
+// comments
+
+    if (!(flags & BL_NOCOMMENT)) {
+        const char *comment = cmt.get_comment(addr);
+        if (comment && comment[0]) {
+            *p++ = ';';
+            *p = 0;
+            strcat(p, comment);
+            p += strlen(p);
+        }
     }
 
 // -----------------------------------------------------
@@ -429,7 +441,7 @@ void DisLine::dis_org(char *s) const
     defCpu->H4Str(rom._base, parms);
 
     // build the ORG line
-    build_line(rom._base, s, "ORG", parms, /*ofs=*/ 0);
+    build_line(rom._base, s, "ORG", parms, /*ofs=*/ 0, /*flags=*/ BL_NOLABEL | BL_NOCOMMENT);
 }
 
 
@@ -558,7 +570,7 @@ void DisLine::write_listing(const char *ext, bool do_asm)
     if (do_asm) {
         // add a blank line and an END opcode
         fwrite(newline, 1, strlen(newline), f);
-        build_line(addr.addr, s, "END", "", /*ofs=*/ 0);
+        build_line(addr.addr, s, "END", "", /*ofs=*/ 0, /*flags=*/ BL_NOCOMMENT);
         fwrite(s, 1, strlen(s), f);
         fwrite(newline, 1, strlen(newline), f);
     }

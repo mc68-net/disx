@@ -23,9 +23,9 @@ Other things that it doesn't do:
 
 This uses a standard makefile, so use the "make" command to build it. It should work in a standard Linux or MacOS environment with C++ developer tools installed. If this isn't sufficient information, then google for "how to use make".
 
-On some systems, if you have not previously used the compiler, make might have trouble finding it. Consult the documentation of your OS distribution for more information.
+On some systems, if you have not previously used the compiler, "make" might have trouble finding it. Consult the documentation of your OS distribution for more information.
 
-If you plan on modifying the code, you might want to use "make depend" first. This generates a file named ".depend" with make dependencies for the .h files. That way, when you change a common .h file, all files that use it will be automatically rebuilt.
+If you plan on modifying the code, you might want to use "make depend" first. This generates a file named ".depend" with make dependencies for the .h files. That way, when you change a common .h file, all files that use it will be automatically rebuilt. The "make depend" command will probably complain about missing standard includes; you should ignore these warnings.
 
 
 === REFERENCES ===
@@ -34,12 +34,23 @@ Each line of disassembly can have one external reference, either code or data bo
 
 Label creation can be suppressed to certain addresses by using the Control-R command on the address.
 
-Address 0x0000 is specifically prevented from generating a reference, because it is almost never used as such.
+Address 0x0000 is specifically prevented from automatically generating a reference, because it is almost never used as such.
 
 
 === TRACING ===
 
 If the label is a code reference, the T command can disassemble into referenced code after finishing the current block of code. This can quickly disasssemble large ranges of code, but it can also be misled by "tricks" like subroutines that pop the return address, read data from that address, and then put it back before returning.  Note that the Z-80 series is particularly vulnerable to blank (0x20) characters causing bogus code references. The "rip-stop" functionality attempts to detect the most obvious situations.
+
+
+=== COMMENTS ===
+
+Comments can be attached to any code line by using the semicolon (';') command. This will bring up the current comment (if any) for editing. Press Return to save the line, press Escape to cancel changes, or delete the entire line and press Return to remove the comment.
+
+Comments are saved in a ".cmt" file, which consists of lines with the address in hexadecimal ASCII, a blank, the comment text, and a newline. They are saved in sorted order, but can be loaded in a non-sorted order. If all comments have been removed, the ".cmt" file is deleted.
+
+If a comment "falls off" because its address is now in the middle of a line, it is not immediately deleted, but can not be seen again until the address starts a line. However, when saving, such hidden labels will not be saved.
+
+Comments are not affected by the Undo command!
 
 
 === UNDO ===
@@ -338,5 +349,15 @@ BE 68000 - 4E56 0000 / 4E5E 4E75
 - code tracing will now automatically stop at the disassembled subroutine call when tracing
 - this is of course not as simple as it sounds
 
-================
 
+=== CHANGELOG ===
+
+4.0.0 - 2022-05-27
+
+Original version
+
+4.1.0 - 2022-06-xx
+
+Added support for user comments.
+
+================

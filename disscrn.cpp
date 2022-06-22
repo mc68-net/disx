@@ -5,6 +5,7 @@
 
 #include "dissave.h"
 #include "discpu.h"
+#include "discmt.h"
 #include <ctype.h>
 #include <signal.h>
 
@@ -88,6 +89,7 @@ struct cmd_line_t line_cmds[] =
 {
     { "quit",   &DisScrn::do_cmd_quit   }, // "quit"   - exit program
     { "q",      &DisScrn::do_cmd_quit   }, // "q"      - exit program
+    { "lst",    &DisScrn::do_cmd_list   }, // "lst"    - save disassembly listing
     { "list",   &DisScrn::do_cmd_list   }, // "list"   - save disassembly listing
     { "asm" ,   &DisScrn::do_cmd_asm    }, // "asm"    - save asm source listing
     { "save",   &DisScrn::do_cmd_save   }, // "save"   - save disassembly state
@@ -1006,10 +1008,10 @@ void DisScrn::do_cmd_tab(char *p)
          print_screen();
     }
 
-    sprintf(s, "current tab stops are: %c %d %d %d %d",
+    sprintf(s, "current tab stops are: %c %d %d %d %d %d",
             disline.hard_tabs ? '!' : ' ',
             disline.tabs[0], disline.tabs[1],
-            disline.tabs[2], disline.tabs[3]);
+            disline.tabs[2], disline.tabs[3], disline.tabs[4]);
     error(s);
 }
 
@@ -1138,6 +1140,47 @@ void DisScrn::do_search(bool UNUSED fwd)
     sprintf(s, "not found: %s", search);
     error(s);
     print_screen();
+}
+
+
+// =====================================================
+// attempt to load a comment for the current line
+// returns false if comments are not allowed for the line
+bool DisScrn::load_comment()
+{
+    // must be "line 0" or "line 1 && ATTR_LF0"
+    if (rom._base <= _sel.addr && _sel.addr < rom.get_end() &&
+        _sel.line - !!(rom.get_attr(_sel.addr) & ATTR_LF0) == 0) {
+
+        // default to no comment
+        _cmd[0] = 0;
+
+        // attempt to get comment for the address
+        const char *s = cmt.get_comment(_sel.addr);
+        if (s) {
+            strcpy(_cmd, s);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+
+// =====================================================
+void DisScrn::do_comment()
+{
+    // updated comment string is in _cmd
+    // comment address is in _sel.addr
+
+    // see if comment has changed
+    const char *old = cmt.get_comment(_sel.addr);
+    if (!old || strcmp(old, _cmd)) {
+        cmt.set_comment(_sel.addr, _cmd);
+        rom._changed = true;
+        print_screen();
+    }
 }
 
 
@@ -2484,6 +2527,10 @@ void DisScrn::input_key(int key)
                 _cmd[len - 1] = 0;
                 print_screen();
             } else {
+                if (_in_input == ';') {
+                    // require ESC or ENTER to end a comment
+                    break;
+                }
                 // backspace past beginning exits command input
                 _in_input = 0;
                 print_screen();
@@ -2509,6 +2556,10 @@ void DisScrn::input_key(int key)
                         strcpy(_search, _cmd);
                     }
                     do_search(key == '/');
+                    break;
+
+                case ';':
+                    do_comment();
                     break;
 
                 default:
@@ -2647,6 +2698,14 @@ void DisScrn::do_key(int key)
             wrefresh(stdscr);
             // now redraw the screen in the new display size
             print_screen();
+            break;
+
+        case ';': // start a comment
+            // make sure line can have a comment, and get existing comment
+            if (load_comment()) {
+                _in_input = key;
+                print_screen();
+            }
             break;
 
         case ':': // start command line

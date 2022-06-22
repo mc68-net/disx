@@ -2,6 +2,8 @@
 
 #include "disstore.h"
 
+#include "discmt.h"
+
 
 // global storage handler object
 DisStore rom;
@@ -284,6 +286,7 @@ int DisStore::load_bin(const char *fname, addr_t ofs, addr_t size, addr_t base)
 
     // remove any previous image data
     unload();
+    cmt.free_comments();
 
     // open the file
     FILE *f = fopen(fname, "rb");

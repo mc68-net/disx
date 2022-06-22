@@ -538,6 +538,29 @@ int Dis8051::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
     strcpy(parms, s);
 
+    // rip-stop checks
+    if (opcode[0]) {
+        // find the previous instruction for this CPU
+        addr_t prev = find_prev_instr(addr);
+        if (prev) {
+            int op = ReadByte(addr);
+            int po = ReadByte(prev);
+            if (prev != addr - 1) {
+                //first instruction was more than one byte
+                po = (po << 8) | ReadByte(prev + 1);
+            }
+            int ops = (po << 8) | op;    // put the two opcodes together
+
+            switch (ops) {
+                case 0x0000: // two NOP in a row
+                case 0xFFFF: // two MOV R7,A in a row
+                    lfref |= RIPSTOP;
+                    break;
+            }
+        }
+    }
+
+    // invalid instruction handler, including the case where it ran out of bytes
     if (opcode[0]==0 || rom.AddrOutRange(addr)) {
         strcpy(opcode, "???");
         H2Str(ReadByte(addr), parms);

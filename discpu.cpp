@@ -908,7 +908,7 @@ void DisDefault::asc_dis_line(addr_t addr, char *opcode, char *parms) const
                *p = 0;
            }
 #if 1 // display ASCII characters with high bit set as 'c'+80H
-           if (' '+0x80 <= c && c <= '~'+0x80
+           if (' '+0x80 <= c && c <= '~'+0x80 && c != '\''+0x80
                && c != '\'' && c != '\\'+0x80) {
                // 'c'+
                sprintf(p, "'%c'+", c & 0x7F);

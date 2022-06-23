@@ -71,7 +71,7 @@ public:
         BL_NOCOMMENT = 1 << 1,  // do not show comment
     };
 
-    static int tabs[T_NTABS];   // values of tab positions
+    static int tabs[T_NTABS-1]; // values of tab positions
     static int line_cols;       // false to show hex bytes, true for asm source format
     static bool hard_tabs;      // true to put hard tabs in listing
 

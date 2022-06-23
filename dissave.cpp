@@ -204,6 +204,15 @@ int DisSave::save_file()
 
     free(block);
 
+    // write "tabs" block
+    // one byte per tab stop, currently five tab stops
+    fwrite("tabs", 1, 4, f);
+    write_long(f, DisLine::T_NTABS-1);
+    for (int i = 0; i < DisLine::T_NTABS-1; i++) {
+        char c = DisLine::tabs[i];
+        fwrite(&c, 1, 1, f);
+    }
+
     // write "view" block
     //   xx xx xx xx sel addr
     //   00 00 00 xx sel line
@@ -552,6 +561,18 @@ if (i == 0) {
             }
 
             free(block);
+        } else
+
+        // ---------------------
+        // tabs block
+
+        if (strncmp("tabs", tag, 4) == 0) {     // 'tabs' block
+            unsigned char buf[DisLine::T_NTABS-1];
+
+            n = fread(buf, 1, DisLine::T_NTABS-1, f);
+            for (int i = 0; i < DisLine::T_NTABS-1; i++) {
+                DisLine::tabs[i] = buf[i];
+            }
         } else
 
         // ---------------------

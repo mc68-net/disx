@@ -7,7 +7,7 @@
 #include "ctype.h"
 
 
-int DisLine::tabs[DisLine::T_NTABS] = {8, 16, 8, 8, 16};
+int DisLine::tabs[DisLine::T_NTABS-1] = {8, 16, 8, 8, 16};
 int DisLine::line_cols = DisLine::SCRN_COLS;
 bool DisLine::hard_tabs = true; // note: requires tabs[] to all be mults of 8
 

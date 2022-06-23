@@ -363,6 +363,7 @@ New features:
 - Added support for user comments.
 - 8051, 8048: added rip-stop for repeated 00H and FFH
 - Command line input can now use left and right arrow keys.
+- Tab stops are now saved to the .ctl file.
 
 Bugs fixed:
 - Fixed a possible crash when started when started with no filename.
@@ -372,5 +373,6 @@ Bugs fixed:
 - The ')' command now clears the pre-LF attribute of added bytes.
 - Fixed an infinite loop when search started from "END" line.
 - Width of address/hex fields for search is now taken from tabs[] array.
+- it is now possible to change tab stops
 
 ================

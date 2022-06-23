@@ -1019,7 +1019,7 @@ void DisScrn::do_cmd_tab(char *p)
          int tab = 0;
          while (*p && tab < disline.T_NTABS - 1) {
              int token = GetWord(p, s);
-             if (token != '!') {
+             if (token == '!') {
                  //***FIXME: this should only be allowed as the first parm
                  DisLine::hard_tabs = true;
              } else {

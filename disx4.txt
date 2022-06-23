@@ -12,7 +12,6 @@ What disx4 is intended for:
 
 Cool things that it doesn't do:
 - track RAM references
-- let you add your own comments
 - deal with split references (high byte in one instruction, low byte in another)
 
 Other things that it doesn't do:
@@ -48,9 +47,9 @@ Comments can be attached to any code line by using the semicolon (';') command. 
 
 Comments are saved in a ".cmt" file, which consists of lines with the address in hexadecimal ASCII, a blank, the comment text, and a newline. They are saved in sorted order, but can be loaded in a non-sorted order. If all comments have been removed, the ".cmt" file is deleted.
 
-If a comment "falls off" because its address is now in the middle of a line, it is not immediately deleted, but can not be seen again until the address starts a line. However, when saving, such hidden labels will not be saved.
+If a comment "falls off" because its address is now in the middle of a line, it is not immediately deleted, but can not be seen until the address starts a line again. However, when saving, such hidden labels will not be saved.
 
-Comments are not affected by the Undo command!
+NOTE: Comments are not affected by the Undo command!
 
 
 === UNDO ===
@@ -177,7 +176,9 @@ While typing in the command line:
 Backspace or DEL  Delete last entered character, or exit input mode if at start of line.
 Carriage return   Finish line and start executing it.
 Escape            Abort current line and exit input mode.
-Ctrl-U / Ctrl-X   Erase current line but stay in input mode.
+Ctrl-U / Ctrl-X   Erase to beginning of line.
+Ctrl-A            Move cursor to start of line.
+Ctrl-E            Move cursor to end of line.
 
 
 Command list:
@@ -356,8 +357,20 @@ BE 68000 - 4E56 0000 / 4E5E 4E75
 
 Original version
 
-4.1.0 - 2022-06-xx
+4.1.0 - 2022-06-23
 
-Added support for user comments.
+New features:
+- Added support for user comments.
+- 8051, 8048: added rip-stop for repeated 00H and FFH
+- Command line input can now use left and right arrow keys.
+
+Bugs fixed:
+- Fixed a possible crash when started when started with no filename.
+- A7H in ASCII mode no longer produces " '''+80H "
+- ORG line no longer shows a label
+- 68HC11: fixed opcodes that were missed in a table update (18A6 etc.)
+- The ')' command now clears the pre-LF attribute of added bytes.
+- Fixed an infinite loop when search started from "END" line.
+- Width of address/hex fields for search is now taken from tabs[] array.
 
 ================

@@ -1086,7 +1086,10 @@ void DisScrn::do_search(bool UNUSED fwd)
     }
 
     struct addrline_t addr = _sel;
-    const int skiphex = 24; // width of the address and hex data fields
+
+    // width of the address and hex data fields
+    const int skiphex = abs(DisLine::tabs[DisLine::T_ADDR]) +
+                        abs(DisLine::tabs[DisLine::T_HEX]);
 
     bool wrapped = false; // needed to avoid infinite loop!
     while (true) {

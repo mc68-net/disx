@@ -534,24 +534,14 @@ void DisScrn::print_line(struct addrline_t addr)
 void DisScrn::set_cursor()
 {
     if (_in_input) {
-        // see if command is long enough to scroll
-        int n = strlen(_cmd) - (getmaxx(_win) - 2);
-        if (n < 0) {
-            n = 0;      // if not, put cursor in normal place
-        }
-        wmove(_win, /*row=*/ 0, /*col=*/ strlen(_cmd) + 1 - n );
+        wmove(_win, /*row=*/ 0, /*col=*/ _cmd_pos - _cmd_col + 1);
     } else {
-#if 0
-        // put cursor at start of currently selected line
-        wmove(_win, /*row=*/ _sel_row + 1, /*col=*/ 0);
-#else
         // put cursor on right edge of screen to indicate scroll position
         // note that this is based on address, not lines, so "long" lines
         // will scroll faster!
         float pos = (float) (_sel.addr - _start.addr) / (float) rom._size
                   * (float) (max_row());
         wmove(_win, /*row=*/ 1 + (int) (pos + 0.5), /*col=*/ getmaxx(_win) - 1);
-#endif
     }
 }
 
@@ -569,15 +559,52 @@ void DisScrn::status_line()
         // default to start with prompt character
         char c = _in_input;
 
-        // see if line was too wide for screen
-        int n = strlen(_cmd) - (getmaxx(_win)-2);
-        if (n < 0) {
-            n = 0;      // not too wide, no scrolling needed
-        } else if (n) {
-            c = '>';    // too wide, start with '>' character
+        // determine max width of command line in the window
+        int maxwid = getmaxx(_win) - 2;
+
+        // compute X position of cursor
+        int xpos = _cmd_pos - _cmd_col;
+
+        // check if beyond either edge of the command line space
+        if (xpos < 0) {
+            // before left edge, add xpos to _cmd_col, max 0
+            _cmd_col += xpos;
+            if (_cmd_col < 0) {
+                _cmd_col = 0;
+            }
+        } else if (xpos > maxwid) {
+             // after right edge, add xpos - maxwid to _cmd_col
+            _cmd_col += xpos - maxwid;
         }
 
-        wprintw(_win, "%c%s", c, _cmd + n);
+        // determine how much of _cmd is after _cmd_col
+        int n = strlen(_cmd + _cmd_col);
+        if (n > maxwid) {
+            n = maxwid;
+        }
+        n += _cmd_col;
+
+        // if not at first char, start the line with '<' character
+        if (_cmd_col) {
+            // start with a '<' to show that something is off to the left
+            c = '<';
+        }
+
+        // see if end of string is outside the window range
+        char cc = _cmd[n];
+        if (cc) {
+            // temporarily lop off the end of _cmd
+            _cmd[n] = 0;
+        }
+
+        // print what can be shown
+        wprintw(_win, "%c%s", c, _cmd + _cmd_col);
+        if (cc) {
+            // start with a '>' to show that something is off to the right
+            wprintw(_win, ">");
+            _cmd[n] = cc;
+        }
+
         wclrtoeol(_win);
     } else {
         // display status bar, in inverse video
@@ -1171,6 +1198,9 @@ bool DisScrn::load_comment()
         if (s) {
             strcpy(_cmd, s);
         }
+
+        _cmd_col = 0;
+        _cmd_pos = strlen(_cmd); // start at end of _cmd
 
         return true;
     }
@@ -2535,10 +2565,11 @@ void DisScrn::input_key(int key)
         case 0x08: // BS
         case 0x7F: // DEL
         case KEY_BACKSPACE: // curses backspace key code
-            if (len) {
-                _cmd[len - 1] = 0;
+            if (_cmd_pos) {
+                _cmd_pos--;
+                memcpy(_cmd + _cmd_pos, _cmd + _cmd_pos + 1, len - _cmd_pos + 1);
                 print_screen();
-            } else {
+            } else if (!len) {
                 if (_in_input == ';') {
                     // require ESC or ENTER to end a comment
                     break;
@@ -2552,7 +2583,7 @@ void DisScrn::input_key(int key)
         case 0x0D: // CR
         {
             key = _in_input;    // get input prompt char
-            _in_input = false;  // disable input
+            _in_input = 0;      // disable input
             error("");          // clear error message
             print_screen();     // refresh screen
             // do something with _cmd here
@@ -2581,16 +2612,50 @@ void DisScrn::input_key(int key)
             break;
         }
 
+        case 0x01: // ctrl-A
+            // move to beginning of line
+            if (_cmd_pos) {
+                _cmd_pos = 0;
+                print_screen();
+            }
+            break;
+
+        case 0x05: // ctrl-E
+            // move to end of line
+            if (_cmd_pos < len) {
+                _cmd_pos = len;
+                print_screen();
+            }
+            break;
+
         case 0x1B: // ESC
             _in_input = false;
             _cmd[0] = 0;
             print_screen();
             break;
 
+        case KEY_LEFT:
+            if (_cmd_pos) {
+                _cmd_pos--;
+                print_screen();
+            }
+            break;
+
+        case KEY_RIGHT:
+            if (_cmd_pos < len) {
+                _cmd_pos++;
+                print_screen();
+            }
+            break;
+
         case 0x15: // ctrl-U
         case 0x18: // ctrl-X
-            _cmd[0] = 0;
-            print_screen();
+            // delete from cursor to beginning of line
+            if (_cmd_pos) {
+                memcpy(_cmd, _cmd + _cmd_pos, len - _cmd_pos + 1);
+                _cmd_pos = 0;
+                print_screen();
+            }
             break;
 
         default:
@@ -2610,11 +2675,14 @@ void DisScrn::input_key(int key)
                 break;
             }
 
-            // add character to buffer
-            _cmd[len + 1] = 0;
-            _cmd[len] = key;
-            print_screen();
+            // make an insert space
+            memcpy(_cmd + _cmd_pos + 1, _cmd + _cmd_pos, len - _cmd_pos + 1);
 
+            // add character to buffer
+            _cmd[_cmd_pos] = key;
+            _cmd_pos++;
+
+            print_screen();
             break;
     }
 }
@@ -2725,6 +2793,8 @@ void DisScrn::do_key(int key)
         case '?': // start search backward
             error(NULL);
             _cmd[0] = 0;
+            _cmd_col = 0;
+            _cmd_pos = 0;
             _in_input = key;
             print_screen();
             break;

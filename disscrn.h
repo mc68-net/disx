@@ -38,6 +38,8 @@ public:
     bool _quit;                 // true to exit program
     char _rpt_key;              // key to repeat with '*' command
     int _rpt_count;             // count to use with '*' command
+    int _cmd_col;               // first visible char of _cmd
+    int _cmd_pos;               // current position in _cmd
 
 public:
 //  Note: no explicit constructor, to avoid problems with constructor order

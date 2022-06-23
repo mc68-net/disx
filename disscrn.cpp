@@ -1017,6 +1017,7 @@ void DisScrn::do_cmd_tab(char *p)
 
     if (*p) {
          int tab = 0;
+         DisLine::hard_tabs = false;
          while (*p && tab < disline.T_NTABS - 1) {
              int token = GetWord(p, s);
              if (token == '!') {

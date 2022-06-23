@@ -205,9 +205,12 @@ int DisSave::save_file()
     free(block);
 
     // write "tabs" block
-    // one byte per tab stop, currently five tab stops
+    //   one byte for hard_tabs flag
+    //   one byte per tab stop, currently five tab stops
     fwrite("tabs", 1, 4, f);
-    write_long(f, DisLine::T_NTABS-1);
+    write_long(f, DisLine::T_NTABS);
+    char hard_tabs = DisLine:: hard_tabs;
+    fwrite(&hard_tabs, 1, 1, f);
     for (int i = 0; i < DisLine::T_NTABS-1; i++) {
         char c = DisLine::tabs[i];
         fwrite(&c, 1, 1, f);
@@ -567,11 +570,16 @@ if (i == 0) {
         // tabs block
 
         if (strncmp("tabs", tag, 4) == 0) {     // 'tabs' block
-            unsigned char buf[DisLine::T_NTABS-1];
+            unsigned char buf[16] = {0};
 
-            n = fread(buf, 1, DisLine::T_NTABS-1, f);
-            for (int i = 0; i < DisLine::T_NTABS-1; i++) {
-                DisLine::tabs[i] = buf[i];
+            n = fread(buf, 1, len, f);
+            DisLine::hard_tabs = !!buf[0];
+            int n = DisLine::T_NTABS - 1;
+            if (n > len - 1) {
+                n = len - 1;
+            }
+            for (int i = 0; i < n; i++) {
+                DisLine::tabs[i] = buf[i+1];
             }
         } else
 

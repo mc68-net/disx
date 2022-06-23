@@ -1088,29 +1088,37 @@ void DisScrn::do_search(bool UNUSED fwd)
     struct addrline_t addr = _sel;
     const int skiphex = 24; // width of the address and hex data fields
 
+    bool wrapped = false; // needed to avoid infinite loop!
     while (true) {
         // move forward/back one line
         if (fwd) {
-            // if current line is _end, wrap around
+            // forward search
+            // if current line is not _end, move to next line
+            if (addr != _end) {
+                addr.next_line();
+            }
+            // if next line is _end, wrap around
             if (addr == _end) {
                 addr = _start;
                 error("wrapped around...");
                 _errbeep = true;
-            } else {
-                 // if next line is _end, wrap around
-                 addr.next_line();
-                 if (addr == _end) {
-                     addr = _start;
-                     error("wrapped around...");
-                    _errbeep = true;
+                // special case if search started at _end
+                if (wrapped && _sel == _end) {
+                    break;
                 }
+                wrapped = true;
             }
         } else {
+            // reverse search
             // if current line is _start, wrap around
             if (addr == _start) {
                 addr = _end;
                 error("wrapped around...");
                 _errbeep = true;
+                // special case if search started at _end
+                if (_sel == _end) {
+                    break;
+                }
             }
             addr.prev_line();
         }

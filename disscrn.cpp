@@ -2162,6 +2162,10 @@ void DisScrn::do_cmd_prv()
             // find previous line
             _sel.prev_addr();
         }
+        // check for pre-LF line
+        if (rom.test_attr(_sel.addr, ATTR_LF0)) {
+            _sel.next_line();
+        }
         recenter(true);
         print_screen();
     }
@@ -2177,6 +2181,10 @@ void DisScrn::do_cmd_nxt()
         while (_sel.addr < rom.get_end() && !rom.test_attr(_sel.addr, ATTR_LMASK)) {
             // find next line
             _sel.next_addr();
+        }
+        // check for pre-LF line
+        if (rom.test_attr(_sel.addr, ATTR_LF0)) {
+            _sel.next_line();
         }
         recenter(true);
         print_screen();

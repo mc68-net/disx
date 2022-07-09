@@ -388,4 +388,9 @@ Bugs fixed:
 - It is now possible to change tab stops.
 - [ and ] commands will now skip past a pre-LF line.
 
+4.2.0 - 
+
+New features:
+- added 68HC05 disassembler
+
 ================

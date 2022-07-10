@@ -610,12 +610,14 @@ void DisScrn::status_line()
         // display status bar, in inverse video
         wattron(_win, A_REVERSE);
 
+#if 0
         // what to display? I dunno, how about the current address?
         if (defCpu->_addrwid == ADDR_16) {
             wprintw(_win, "  ADDR = %.4X", _sel.addr);
         } else {
             wprintw(_win, "  ADDR = %.6X", _sel.addr);
         }
+#endif
 
         if (_count) {
             wprintw(_win, "  COUNT = %d", _count);

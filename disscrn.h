@@ -77,6 +77,8 @@ private:
     void do_search(bool fwd);   // do search
     bool load_comment();        // load a comment for editing
     void do_comment();          // do comment
+    addr_t get_refaddr();       // get refaddr from _sel, returns zero if none
+    void do_trace(addr_t addr); // do trace, common code for shift-T and ctrl-T
 
     void push_addr(addr_t addr, addr_t next = 0);// push address to _goto_stk
     addr_t pop_addr();          // pop address from _goto_stk
@@ -116,6 +118,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_cR();           // handle ctrl-'R' command
     void do_cmd_cU();           // handle ctrl-'U' command
     void do_cmd_T();            // handle 'T' command
+    void do_cmd_cT();           // handle ctrl-'T' command
     void do_cmd_U();            // handle 'U' command
     void do_cmd_w();            // handle 'w' command
     void do_cmd_W();            // handle shift-W command

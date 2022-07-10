@@ -52,6 +52,7 @@ struct cmd_char_t char_cmds[] =
     { 'c',  &DisScrn::do_cmd_c   }, // disassemble as code
     { 'C',  &DisScrn::do_cmd_C   }, // disassemble as code until lfflag or illegal
     { 'T',  &DisScrn::do_cmd_T   }, // shft-T trace disassembly from _sel
+    { 0x14, &DisScrn::do_cmd_cT  }, // ctrl-T trace disassembly from refaddr
     { '^',  &DisScrn::do_cmd_lbl }, // toggle label type at refaddr
     { 0x0C, &DisScrn::do_cmd_cL  }, // ctrl-L toggle label type
     { 'L',  &DisScrn::do_cmd_cL  }, // shift-L toggle label type
@@ -1856,24 +1857,17 @@ addr_t pop_stack()
 
 
 // =====================================================
-// trace disassemble from _sel
-void DisScrn::do_cmd_T()
+// trace disassemble from addr
+void DisScrn::do_trace(addr_t addr)
 {
     int lfref = 0;
     addr_t refaddr = 0;
     addr_t nextaddr = 0;
-    bool firsttime = true; // to allow tracing to start at 0000
 
     rom.save_undo();
 
-    // start at the current _sel address
     reset_stack();
-    addr_t addr = _sel.addr;
-    if (_sel.line - rom.test_attr(addr, ATTR_LF0) > 0) {
-        // if after code line, use next address
-        addr += _sel.get_len();
-    }
-
+    bool firsttime = true; // to allow tracing to start at 0000
     // loop for every address to trace
     while (firsttime || addr) {
         // for every valid instruction
@@ -1931,14 +1925,60 @@ void DisScrn::do_cmd_T()
     if (nextaddr) {
         _sel.line_start(nextaddr);
     }
+}
+
+
+// =====================================================
+// trace disassemble from _sel
+void DisScrn::do_cmd_T()
+{
+    // start at the current _sel address
+    addr_t addr = _sel.addr;
+    if (_sel.line - rom.test_attr(addr, ATTR_LF0) > 0) {
+        // if after code line, use next address
+        addr += _sel.get_len();
+    }
+
+    do_trace(addr);
 
     // recalculate the screen
     print_screen();
+}
 
-#if 0
-    wmove(_win, 1, 40);
-    wprintw(_win, " len = %d lf = %d ", len, lfref);
-#endif
+
+// =====================================================
+// trace disassemble from refaddr
+void DisScrn::do_cmd_cT()
+{
+    // save current selection
+    addrline_t save = _sel;
+
+    // get refaddr for current line
+    addr_t addr = get_refaddr();
+    // exit if no refaddr
+    if (!addr) {
+        return;
+    }
+    // exit if not code refaddr
+    if ((rom.get_attr(addr) & ATTR_LMASK) != ATTR_LCODE) {
+        return;
+    }
+
+    do_trace(addr);
+
+    // return cursor to previous selection
+    _sel = save;
+
+    // move to next sel addr
+    _sel.next_addr();
+
+    // confirm that something happened
+    char s[256];
+    sprintf(s, "%.4X traced", (int) addr);
+    error(s);
+
+    // recalculate the screen
+    print_screen();
 }
 
 
@@ -2126,8 +2166,8 @@ void DisScrn::do_cmd_lbl()
 
 
 // =====================================================
-// goto refadr
-void DisScrn::do_cmd_ref()
+// get refadr for _sel, returns zero if none
+addr_t DisScrn::get_refaddr()
 {
     char s[256] = {0};
     int lfref = 0;
@@ -2136,20 +2176,31 @@ void DisScrn::do_cmd_ref()
     // try to get refadr for current line
     int len = disline.get_dis_line(_sel.addr, s, lfref, refaddr);
 
-    wrefresh(_win);
-
+    // check that instruction is valid has a refaddr
     if (len > 0 && (lfref & REFFLAG) && (refaddr != 0)) {
-        // if in image range, go to refaddr
+        // if in image range, return the refaddr
         if (rom._base <= refaddr && refaddr <= rom.get_end()) {
-            // save current _sel.addr on stack
-            push_addr(_sel.addr, refaddr);
-            // select line and redraw screen
-            _sel.line_start(refaddr);
-            recenter(true);
-            print_screen();
-            return;
+            return refaddr;
         }
+    }
 
+    return 0;
+}
+
+
+// =====================================================
+// goto refaddr
+void DisScrn::do_cmd_ref()
+{
+    addr_t refaddr = get_refaddr();
+
+    if (refaddr) {
+        // save current _sel.addr on stack
+        push_addr(_sel.addr, refaddr);
+        // select line and redraw screen
+        _sel.line_start(refaddr);
+        recenter(true);
+        print_screen();
     }
 }
 

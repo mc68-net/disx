@@ -90,7 +90,7 @@ enum InstType
     iBIndexedY,  // $dir,Y,$mask
     iIndexedY,   // 68HC11: $ofs,Y
     iMIndexed,   // 6303:   #bit,$ofs,X
-    iMExtended   // 6303:   #bit,$dir
+    iMDirect,    // 6303:   #bit,$dir
 };
 
 struct InstrRec {
@@ -219,34 +219,34 @@ static const struct InstrRec M6800_opcdTable[] =
 /*5F*/  {"CLRB" , iInherent  , _6800, 0                },
 
 /*60*/  {"NEG"  , iIndexed   , _6800, 0                },
-/*61*/  {"AIM"  , iInherent  , _6303, 0                }, // (6303 AIM iMIndexed)
-/*62*/  {"OIM"  , iInherent  , _6303, 0                }, // (6303 OIM iMIndexed)
+/*61*/  {"AIM"  , iMIndexed  , _6303, 0                }, // (6303 AIM iMIndexed)
+/*62*/  {"OIM"  , iMIndexed  , _6303, 0                }, // (6303 OIM iMIndexed)
 /*63*/  {"COM"  , iIndexed   , _6800, 0                },
 /*64*/  {"LSR"  , iIndexed   , _6800, 0                },
-/*65*/  {"EIM"  , iInherent  , _6303, 0                }, // (6303 EIM iMIndexed)
+/*65*/  {"EIM"  , iMIndexed  , _6303, 0                }, // (6303 EIM iMIndexed)
 /*66*/  {"ROR"  , iIndexed   , _6800, 0                },
 /*67*/  {"ASR"  , iIndexed   , _6800, 0                },
 /*68*/  {"ASL"  , iIndexed   , _6800, 0                },
 /*69*/  {"ROL"  , iIndexed   , _6800, 0                },
 /*6A*/  {"DEC"  , iIndexed   , _6800, 0                },
-/*6B*/  {"TIM"  , iInherent  , _6303, 0                }, // (6303 TIM iMIndexed)
+/*6B*/  {"TIM"  , iMIndexed  , _6303, 0                }, // (6303 TIM iMIndexed)
 /*6C*/  {"INC"  , iIndexed   , _6800, 0                },
 /*6D*/  {"TST"  , iIndexed   , _6800, 0                },
 /*6E*/  {"JMP"  , iIndexed   , _6800, LFFLAG           },
 /*6F*/  {"CLR"  , iIndexed   , _6800, 0                },
 
 /*70*/  {"NEG"  , iExtended  , _6800, 0                },
-/*71*/  {"AIM"  , iInherent  , _6303, 0                }, // (6303 AIM iMExtended)
-/*72*/  {"OIM"  , iInherent  , _6303, 0                }, // (6303 OIM iMExtended)
+/*71*/  {"AIM"  , iMDirect   , _6303, 0                }, // (6303 AIM iMDirect)
+/*72*/  {"OIM"  , iMDirect   , _6303, 0                }, // (6303 OIM iMDirect)
 /*73*/  {"COM"  , iExtended  , _6800, 0                },
 /*74*/  {"LSR"  , iExtended  , _6800, 0                },
-/*75*/  {"EIM"  , iInherent  , _6303, 0                }, // (6303 EIM iMExtended)
+/*75*/  {"EIM"  , iMDirect   , _6303, 0                }, // (6303 EIM iMDirect)
 /*76*/  {"ROR"  , iExtended  , _6800, 0                },
 /*77*/  {"ASR"  , iExtended  , _6800, 0                },
 /*78*/  {"ASL"  , iExtended  , _6800, 0                },
 /*79*/  {"ROL"  , iExtended  , _6800, 0                },
 /*7A*/  {"DEC"  , iExtended  , _6800, 0                },
-/*7B*/  {"TIM"  , iInherent  , _6303, 0                }, // (6303 TIM iMExtended)
+/*7B*/  {"TIM"  , iMDirect   , _6303, 0                }, // (6303 TIM iMDirect)
 /*7C*/  {"INC"  , iExtended  , _6800, 0                },
 /*7D*/  {"TST"  , iExtended  , _6800, 0                },
 /*7E*/  {"JMP"  , iExtended  , _6800, LFFLAG | REFFLAG | CODEREF},
@@ -1416,12 +1416,16 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
             case iMIndexed: // #bit,$ofs,X
                 i = ReadByte(ad++); // bit
                 j = ReadByte(ad++); // ofs
-                sprintf(parms, "#%.2X,$%.2X,X", i, j);
+                ad += 2;
+                len += 2;
+                sprintf(parms, "#$%.2X,$%.2X,X", i, j);
                 break;
 
-            case iMExtended: // #bit,$dir
+            case iMDirect: // #bit,$dir
                 i = ReadByte(ad++); // bit
                 j = ReadByte(ad++); // direct addr
+                ad += 2;
+                len += 2;
                 sprintf(parms, "#%.2X,$%.2X", i, j);
                 break;
         }

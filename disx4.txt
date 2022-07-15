@@ -392,5 +392,9 @@ Bugs fixed:
 
 New features:
 - added 68HC05 disassembler
+- added ctrl-T command to trace at refaddr of current line
+
+Bugs fixed:
+- 68HC11: fixed AIM/OIM/EIM/TIM instructions for 6303
 
 ================

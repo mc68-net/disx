@@ -1959,12 +1959,15 @@ void DisScrn::do_cmd_cT()
     if (!addr) {
         return;
     }
-    // exit if not code refaddr
-    if ((rom.get_attr(addr) & ATTR_LMASK) != ATTR_LCODE) {
-        return;
-    }
 
     do_trace(addr);
+
+    // if addr has no label but now it's >= mCode, make a code label
+    if ((rom.get_attr(addr) & ATTR_LMASK) == ATTR_LNONE) {
+        if (rom.get_type(addr) >= mCode) {
+            rom.set_attr(addr, rom.get_attr(addr) | ATTR_LCODE);
+        }
+    }
 
     // return cursor to previous selection
     _sel = save;

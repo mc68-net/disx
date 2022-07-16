@@ -1413,7 +1413,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 RefStr(ra, parms+strlen(parms), lfref, refaddr);
                 break;
 
-            case iMIndexed: // #bit,$ofs,X
+            case iMIndexed: // #bits,$ofs,X
                 i = ReadByte(ad++); // bit
                 j = ReadByte(ad++); // ofs
                 ad += 2;
@@ -1421,12 +1421,12 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 sprintf(parms, "#$%.2X,$%.2X,X", i, j);
                 break;
 
-            case iMDirect: // #bit,$dir
+            case iMDirect: // #bits,$dir
                 i = ReadByte(ad++); // bit
                 j = ReadByte(ad++); // direct addr
                 ad += 2;
                 len += 2;
-                sprintf(parms, "#%.2X,$%.2X", i, j);
+                sprintf(parms, "#$%.2X,$%.2X", i, j);
                 break;
         }
     } else {

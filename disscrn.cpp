@@ -1960,11 +1960,19 @@ void DisScrn::do_cmd_cT()
         return;
     }
 
-    do_trace(addr);
+    // don't trace if refaddr is already code for the current CPU
+    if (rom.get_type(addr) != curCpu->_id) {
+        do_trace(addr);
 
-    // if addr has no label but now it's >= mCode, make a code label
+        // confirm that something happened
+        char s[256];
+        sprintf(s, "%.4X traced", (int) addr);
+        error(s);
+    }
+
+    // if addr has no label but now it's code, make a code label
     if ((rom.get_attr(addr) & ATTR_LMASK) == ATTR_LNONE) {
-        if (rom.get_type(addr) >= mCode) {
+        if (rom.get_type(addr) == curCpu->_id) {
             rom.set_attr(addr, rom.get_attr(addr) | ATTR_LCODE);
         }
     }
@@ -1974,11 +1982,6 @@ void DisScrn::do_cmd_cT()
 
     // move to next sel addr
     _sel.next_addr();
-
-    // confirm that something happened
-    char s[256];
-    sprintf(s, "%.4X traced", (int) addr);
-    error(s);
 
     // recalculate the screen
     print_screen();

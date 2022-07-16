@@ -143,6 +143,9 @@ shift-C         Disassemble as code until unconditional branch or illegal instru
 T               Trace disassemble from current instruction, same rules as shift-C except
                 that all code references are followed and disassembled as well.
 
+ctrl-T          Trace disassemble from the referenced address. This is intended for jump
+                tables. The reference address will become a code label when appropriate.
+
 l               Toggle a pre-instruction blank line before this code/data line.
 
 shift-L         Toggle label type at this address between none, data, and code. Note that
@@ -326,6 +329,9 @@ Q: It crashed and now I can't see what I'm typing!
 A: When an app using ncurses crashes, it can leave the terminal in an inconvienent state. The command "stty sane" should return things to normal. If it locks up, pressing control-C twice should force exit to the command line with ncurses properly cleaned up.
 
 REMEMBER, IF IT CRASHES YOU MAY NEED TO 'stty sane' TO GET THE TERMINAL BACK
+
+Q: It crashed with an "assert"!
+A: Try to reproduce the problem. Go back and do stuff up to right before the problem, then save. Try a step at a time until it crashes. What is needed to debug this is the binary file, the save file from just before the crash, and what keys to press to cause the crash.
 
 
 === HINTS AND TIPS ===

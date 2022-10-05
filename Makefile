@@ -33,6 +33,7 @@ CXXFLAGS = -Wall -Werror -Wextra -Wno-sign-compare -fno-rtti -fno-exceptions -O2
 
 # libraries
 LDLIBS = -lncurses
+LDFLAGS = -lstdc++
 
 
 .PHONY: zip

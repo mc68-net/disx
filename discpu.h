@@ -37,6 +37,9 @@ protected:
     const char *_dwopcd;  // text for WORD or DW or FDB etc.
     const char *_dlopcd;  // text for LONG or DL etc.
     // more of these as needed...
+    const char *_drwopcd; // text for reverse-endian DW
+//  const char *_drlopcd; // text for reverse-endian DL
+
 public:
     char    _curpc;       // character for . or * or $
     uint8_t _endian;      // =1 if big-endian (6800/68000), =0 if little endian

@@ -8,7 +8,7 @@ class DisZ80 : public CPU {
 public:
     DisZ80(const char *name, int subtype, int endian, int addrwid,
            char curAddrChr, char hexChr, const char *byteOp,
-           const char *wordOp, const char *longOp);
+           const char *wordOp, const char *revwordOp, const char *longOp);
 
     virtual int dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr);
 };
@@ -31,19 +31,19 @@ enum {
 };
 
 
-DisZ80 cpu_8080 ("8080",  CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_Z8080("Z8080", CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_8085 ("8085",  CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_Z8085("Z8085", CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_z80  ("Z80",   CPU_Z80,  LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_z180 ("Z180",  CPU_Z180, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_GB   ("GB",    CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-DisZ80 cpu_GBZ80("GBZ80", CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
+DisZ80 cpu_8080 ("8080",  CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_Z8080("Z8080", CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_8085 ("8085",  CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_Z8085("Z8085", CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_z80  ("Z80",   CPU_Z80,  LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_z180 ("Z180",  CPU_Z180, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_GB   ("GB",    CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_GBZ80("GBZ80", CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
 
 
 DisZ80::DisZ80(const char *name, int subtype, int endian, int addrwid,
                char curAddrChr, char hexChr, const char *byteOp,
-               const char *wordOp, const char *longOp)
+               const char *wordOp, const char *revwordOp, const char *longOp)
 {
     _file    = __FILE__;
     _name    = name;
@@ -52,6 +52,7 @@ DisZ80::DisZ80(const char *name, int subtype, int endian, int addrwid,
     _dbopcd  = byteOp;
     _dwopcd  = wordOp;
     _dlopcd  = longOp;
+    _drwopcd = revwordOp;
     _curpc   = curAddrChr;
     _endian  = endian;
     _hexchr  = hexChr;

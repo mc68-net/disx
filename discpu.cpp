@@ -72,6 +72,7 @@ void CPU::set_def_cpu()
     generic._dbopcd  = _dbopcd;
     generic._dwopcd  = _dwopcd;
     generic._dlopcd  = _dlopcd;
+    generic._drwopcd = _drwopcd;
     generic._endian  = _endian;
     generic._curpc   = _curpc;
     generic._hexchr  = _hexchr;
@@ -600,8 +601,13 @@ void DisDefault::rword_dis_line(addr_t addr, char *opcode, char *parms, int &lfr
     int len = rom.get_len(addr) / 2;
 
     char *p = parms;
-    strcpy(opcode, _dwopcd);
-    strcat(opcode, "*");
+    // use DW reverse opcode if specified
+    if (_drwopcd) {
+        strcpy(opcode, _drwopcd);
+    } else {
+        strcpy(opcode, _dwopcd);
+        strcat(opcode, "*");
+    }
     int w = ReadRWord(addr);
     addr += 2;
     RefStr4(w, p, lfref, refaddr);

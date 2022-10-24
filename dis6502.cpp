@@ -1457,14 +1457,6 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
                     break;
 
                 // implied branch-always combinations
-                case 0x1030: // BPL:BMI
-                case 0x3010: // BMI:BPL
-                case 0x5070: // BVC:BVS
-                case 0x7050: // BVS:BVC
-                case 0x90B0: // BCC:BCS
-                case 0xB090: // BCS:BCC
-                case 0xD0F0: // BNE:BEQ
-                case 0xF0D0: // BEQ:BNE
                 case 0x1890: // CLC:BCS
                 case 0x38B0: // SEC:BCS
                 case 0xB850: // CLV:BVC
@@ -1482,6 +1474,14 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
             // other conditions
             switch (ops & 0xFF00FF) {
+                case 0x100030: // BPL:BMI
+                case 0x300010: // BMI:BPL
+                case 0x500070: // BVC:BVS
+                case 0x700050: // BVS:BVC
+                case 0x9000B0: // BCC:BCS
+                case 0xB00090: // BCS:BCC
+                case 0xD000F0: // BNE:BEQ
+                case 0xF000D0: // BEQ:BNE
                 case 0xA000D0: // LDY #i:BNE
                 case 0xA200D0: // LDX #i:BNE
                 case 0xA900D0: // LDA #i:BNE

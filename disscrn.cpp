@@ -1953,6 +1953,11 @@ void DisScrn::do_cmd_cT()
     // save current selection
     addrline_t save = _sel;
 
+    // make current address a word
+    if (rom.get_type(_sel.addr) != mWord) {
+        rom.set_instr(_sel.addr, 2, mWord);
+    }
+
     // get refaddr for current line
     addr_t addr = get_refaddr();
     // exit if no refaddr

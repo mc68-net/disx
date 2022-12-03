@@ -14,6 +14,7 @@ Cool things that it doesn't do:
 - track RAM references
 - deal with split references (high half in one instruction, low half in another)
 - combine separate binary files (if your code comes from multiple ROMs, you will need to create a combined binary first)
+- handle multiple code segments with different address ranges
 
 
 === BULDING ===
@@ -24,7 +25,7 @@ On some systems, if you have not previously used the compiler, "make" might have
 
 If you plan on modifying the code, you might want to use "make depend" first. This generates a file named ".depend" with make dependencies for the .h files. That way, when you change a common .h file, all files that use it will be automatically rebuilt. The "make depend" command will probably complain about missing standard includes; you should ignore these warnings.
 
-I haven't tried to build this on Windows. It might work with either Cygwin or the Linux subsystem.
+I haven't tried to build this on Windows. It might work with either Cygwin or the Linux subsystem. At least one person has tried with Cygwin, but its system headers defined "addr_t" for some reason.
 
 
 === REFERENCES ===
@@ -143,8 +144,9 @@ shift-C         Disassemble as code until unconditional branch or illegal instru
 T               Trace disassemble from current instruction, same rules as shift-C except
                 that all code references are followed and disassembled as well.
 
-ctrl-T          Trace disassemble from the referenced address. This is intended for jump
-                tables. The reference address will become a code label when appropriate.
+ctrl-T          Disassemble as a word and trace from the referenced address. This is
+                intended for jump tables. The reference address will become a code label
+                when appropriate.
 
 l               Toggle a pre-instruction blank line before this code/data line.
 
@@ -312,6 +314,8 @@ This is a rough estimation of the quality of each disassembler:
 2  dis7810.cpp   - only tested on one code example
 1  dis78K0.cpp   - the code that I thought was 78K0 turned out to be 78K3, so no examples
 2  dis78K3.cpp   - only tested on one code example
+2  dis8086.cpp   - very minimal, only useful for Small model code without segments
+2  dispdp11.cpp  - sort of works, but not enough examples
 
 
 === Q AND A ===
@@ -331,7 +335,7 @@ A: When an app using ncurses crashes, it can leave the terminal in an inconviene
 REMEMBER, IF IT CRASHES YOU MAY NEED TO 'stty sane' TO GET THE TERMINAL BACK
 
 Q: It crashed with an "assert"!
-A: Try to reproduce the problem. Go back and do stuff up to right before the problem, then save. Try a step at a time until it crashes. What is needed to debug this is the binary file, the save file from just before the crash, and what keys to press to cause the crash.
+A: Try to reproduce the problem. Go back and do stuff up to right before the problem, then save. Try a step at a time until it crashes. What is needed to debug this is the binary file, the .ctl file from just before the crash, and what keys to press to cause the crash.
 
 
 === HINTS AND TIPS ===
@@ -357,6 +361,7 @@ BE 6809 - BD xx xx /
 BE 1802 - Dx / Cx xx xx / 70 / 3x xx / F8 xx By F8 xx Ay
 BE 68000 - 4E56 0000 / 4E5E 4E75
          - vector addresse longwords at 0000-00FF
+LE 8086 - return instructions C2 C3 CA CB / branch instructions 7xrr with rr F0-10
 
 * CPUs without 16-bit load instructions are harder to work with because there are no register loads of full addresses. You can still put a label at the address, but the references will have to be manually replaced in the resulting .asm file.
 
@@ -399,8 +404,11 @@ Bugs fixed:
 New features:
 - added 68HC05 disassembler
 - added ctrl-T command to trace at refaddr of current line
+- added a minimal 8086 disassembler
+- added a minimal PDP-11 disassembler
 
 Bugs fixed:
 - 68HC11: fixed AIM/OIM/EIM/TIM instructions for 6303
+- 6502: fixed some branch-always combinations
 
 ================

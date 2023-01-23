@@ -332,25 +332,6 @@ void DisPDP11::DstAddr(int opcd, char *parms, int addr, int &len, bool &invalid,
 }
 
 
-#if 0 // not used
-static void AppendReg(char slashChar, int i, char *parms, char *names, bool *slashFlag)
-{
-    char *p;
-
-    p = parms + strlen(parms);
-
-    if (*slashFlag) {
-        *p++ = slashChar;
-    }
-    *slashFlag = true;
-    *p++ = names[i*2];
-    *p++ = names[i*2+1];
-
-    *p = 0;
-}
-#endif
-
-
 InstrPtr DisPDP11::FindInstr(uint16_t opcd)
 {
     InstrPtr p;

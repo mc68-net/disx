@@ -406,6 +406,7 @@ New features:
 - added ctrl-T command to trace at refaddr of current line
 - added a minimal 8086 disassembler
 - added a minimal PDP-11 disassembler
+- added Intel mnemonics for 8080 and 8085 disassembly
 
 Bugs fixed:
 - 68HC11: fixed AIM/OIM/EIM/TIM instructions for 6303

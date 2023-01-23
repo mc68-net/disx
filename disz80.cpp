@@ -8,7 +8,10 @@ class DisZ80 : public CPU {
 public:
     DisZ80(const char *name, int subtype, int endian, int addrwid,
            char curAddrChr, char hexChr, const char *byteOp,
-           const char *wordOp, const char *revwordOp, const char *longOp);
+           const char *wordOp, const char *revwordOp, const char *longOp,
+           bool zilog);
+
+    bool _zilog; // false for Intel opcodes, true for Zilog opcodes
 
     virtual int dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr);
 };
@@ -17,9 +20,15 @@ public:
 enum { // cur_CPU->subtype
     CPU_8080,
     CPU_8085,
+    CPU_8085U,
     CPU_Z80,
     CPU_Z180,
     CPU_GB,
+};
+
+enum {
+    OP_INTEL,
+    OP_ZILOG,
 };
 
 enum {
@@ -31,19 +40,22 @@ enum {
 };
 
 
-DisZ80 cpu_8080 ("8080",  CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_Z8080("Z8080", CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_8085 ("8085",  CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_Z8085("Z8085", CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_z80  ("Z80",   CPU_Z80,  LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_z180 ("Z180",  CPU_Z180, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_GB   ("GB",    CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
-DisZ80 cpu_GBZ80("GBZ80", CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL");
+DisZ80 cpu_8080 ("8080",  CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_INTEL);
+DisZ80 cpu_Z8080("Z8080", CPU_8080, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
+DisZ80 cpu_8085 ("8085",  CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_INTEL);
+DisZ80 cpu_8085U("8085U", CPU_8085U,LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_INTEL);
+DisZ80 cpu_Z8085("Z8085", CPU_8085, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
+//DisZ80 cpu_Z8085U("Z8085U",CPU_8085U, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
+DisZ80 cpu_z80  ("Z80",   CPU_Z80,  LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
+DisZ80 cpu_z180 ("Z180",  CPU_Z180, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
+DisZ80 cpu_GB   ("GB",    CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
+DisZ80 cpu_GBZ80("GBZ80", CPU_GB,   LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DRW", "DL", OP_ZILOG);
 
 
 DisZ80::DisZ80(const char *name, int subtype, int endian, int addrwid,
                char curAddrChr, char hexChr, const char *byteOp,
-               const char *wordOp, const char *revwordOp, const char *longOp)
+               const char *wordOp, const char *revwordOp, const char *longOp,
+               bool zilog)
 {
     _file    = __FILE__;
     _name    = name;
@@ -57,6 +69,7 @@ DisZ80::DisZ80(const char *name, int subtype, int endian, int addrwid,
     _endian  = endian;
     _hexchr  = hexChr;
     _addrwid = addrwid;
+    _zilog   = zilog;
 
     add_cpu();
 }
@@ -94,6 +107,281 @@ static const struct InstrRec *SearchInstr(const struct SearchInstrRec *table, in
     return NULL;
 }
 
+// Intel 8080 opcodes
+static const struct InstrRec I8085_opcdTable[] =
+{           // op     parms            lfref
+/*00*/      {"NOP",  ""        , 0                },
+/*01*/      {"LXI",  "B,w"     , 0                },
+/*02*/      {"STAX", "B"       , 0                },
+/*03*/      {"INX",  "B"       , 0                },
+/*04*/      {"INR",  "B"       , 0                },
+/*05*/      {"DCR",  "B"       , 0                },
+/*06*/      {"MVI",  "B,b"     , 0                },
+/*07*/      {"RLC",  ""        , 0                },
+/*08*/      {"",     ""        , 0                }, // DSUB
+/*09*/      {"DAD",  "B"       , 0                },
+/*0A*/      {"LDAX", "B"       , 0                },
+/*0B*/      {"DCX",  "B"       , 0                },
+/*0C*/      {"INR",  "C"       , 0                },
+/*0D*/      {"DCR",  "C"       , 0                },
+/*0E*/      {"MVI",  "C,b"     , 0                },
+/*0F*/      {"RRC",  ""        , 0                },
+
+/*10*/      {"",     ""        , 0                }, // ARHL
+/*11*/      {"LXI",  "D,w"     , 0                },
+/*12*/      {"STAX", "D"       , 0                },
+/*13*/      {"INX",  "D"       , 0                },
+/*14*/      {"INR",  "D"       , 0                },
+/*15*/      {"DCR",  "D"       , 0                },
+/*16*/      {"MVI",  "D,b"     , 0                },
+/*17*/      {"RAL",  ""        , 0                },
+/*18*/      {"",     ""        , 0                }, // RDEL
+/*19*/      {"DAD",  "D"       , 0                },
+/*1A*/      {"LD",   "A,(DE)"  , 0                },
+/*1B*/      {"DCX",  "D"       , 0                },
+/*1C*/      {"INC",  "E"       , 0                },
+/*1D*/      {"DEC",  "E"       , 0                },
+/*1E*/      {"MVI",  "E,b"     , 0                },
+/*1F*/      {"RAR",  ""        , 0                },
+
+/*20*/      {"",     ""        , 0                }, // RIM
+/*21*/      {"LXI",  "H,w"     , 0                },
+/*22*/      {"SHLD", "w"       , 0                },
+/*23*/      {"INX",  "H"       , 0                },
+/*24*/      {"INR",  "H"       , 0                },
+/*25*/      {"DCR",  "H"       , 0                },
+/*26*/      {"MVI",  "H,b"     , 0                },
+/*27*/      {"DAA",  ""        , 0                },
+/*28*/      {"",     ""        , 0                }, // LDHI d8
+/*29*/      {"DAD",  "H"       , 0                },
+/*2A*/      {"LHLD", "w"       , 0                },
+/*2B*/      {"DCX",  "H"       , 0                },
+/*2C*/      {"INR",  "L"       , 0                },
+/*2D*/      {"DCR",  "L"       , 0                },
+/*2E*/      {"MVI",  "L,b"     , 0                },
+/*2F*/      {"CMA",  ""        , 0                },
+
+/*30*/      {"",      ""       , 0                }, // SIM
+/*31*/      {"LXI",  "SP,w"    , 0                },
+/*32*/      {"STA",  "w"       , 0                },
+/*33*/      {"INX",  "SP"      , 0                },
+/*34*/      {"INR",  "M"       , 0                },
+/*35*/      {"DCR",  "M"       , 0                },
+/*36*/      {"MVI",  "M,b"     , 0                },
+/*37*/      {"STC",  ""        , 0                },
+/*38*/      {"",     ""        , 0                }, // LDSI d8
+/*39*/      {"DAD",  "SP"      , 0                },
+/*3A*/      {"LDA",  "w"       , 0                },
+/*3B*/      {"DCX",  "SP"      , 0                },
+/*3C*/      {"INR",  "A"       , 0                },
+/*3D*/      {"DCR",  "A"       , 0                },
+/*3E*/      {"MVI",  "A,b"     , 0                },
+/*3F*/      {"CMC",  ""        , 0                },
+
+/*40*/      {"MOV",  "B,B"     , RIPSTOP          },
+/*41*/      {"MOV",  "B,C"     , 0                },
+/*42*/      {"MOV",  "B,D"     , 0                },
+/*43*/      {"MOV",  "B,E"     , 0                },
+/*44*/      {"MOV",  "B,H"     , 0                },
+/*45*/      {"MOV",  "B,L"     , 0                },
+/*46*/      {"MOV",  "B,M"     , 0                },
+/*47*/      {"MOV",  "B,A"     , 0                },
+/*48*/      {"MOV",  "C,B"     , 0                },
+/*49*/      {"MOV",  "C,C"     , RIPSTOP          },
+/*4A*/      {"MOV",  "C,D"     , 0                },
+/*4B*/      {"MOV",  "C,E"     , 0                },
+/*4C*/      {"MOV",  "C,H"     , 0                },
+/*4D*/      {"MOV",  "C,L"     , 0                },
+/*4E*/      {"MOV",  "C,M"     , 0                },
+/*4F*/      {"MOV",  "C,A"     , 0                },
+
+/*50*/      {"MOV",  "D,B"     , 0                },
+/*51*/      {"MOV",  "D,C"     , 0                },
+/*52*/      {"MOV",  "D,D"     , RIPSTOP          },
+/*53*/      {"MOV",  "D,E"     , 0                },
+/*54*/      {"MOV",  "D,H"     , 0                },
+/*55*/      {"MOV",  "D,L"     , 0                },
+/*56*/      {"MOV",  "D,M"     , 0                },
+/*57*/      {"MOV",  "D,A"     , 0                },
+/*58*/      {"MOV",  "E,B"     , 0                },
+/*59*/      {"MOV",  "E,C"     , 0                },
+/*5A*/      {"MOV",  "E,D"     , 0                },
+/*5B*/      {"MOV",  "E,E"     , RIPSTOP          },
+/*5C*/      {"MOV",  "E,H"     , 0                },
+/*5D*/      {"MOV",  "E,L"     , 0                },
+/*5E*/      {"MOV",  "E,M"     , 0                },
+/*5F*/      {"MOV",  "E,A"     , 0                },
+
+/*60*/      {"MOV",  "H,B"     , 0                },
+/*61*/      {"MOV",  "H,C"     , 0                },
+/*62*/      {"MOV",  "H,D"     , 0                },
+/*63*/      {"MOV",  "H,E"     , 0                },
+/*64*/      {"MOV",  "H,H"     , RIPSTOP          },
+/*65*/      {"MOV",  "H,L"     , 0                },
+/*66*/      {"MOV",  "H,M"     , 0                },
+/*67*/      {"MOV",  "H,A"     , 0                },
+/*68*/      {"MOV",  "L,B"     , 0                },
+/*69*/      {"MOV",  "L,C"     , 0                },
+/*6A*/      {"MOV",  "L,D"     , 0                },
+/*6B*/      {"MOV",  "L,E"     , 0                },
+/*6C*/      {"MOV",  "L,H"     , 0                },
+/*6D*/      {"MOV",  "L,L"     , RIPSTOP          },
+/*6E*/      {"MOV",  "L,M"     , 0                },
+/*6F*/      {"MOV",  "L,A"     , 0                },
+
+/*70*/      {"MOV",  "M,B"     , 0                },
+/*71*/      {"MOV",  "M,C"     , 0                },
+/*72*/      {"MOV",  "M,D"     , 0                },
+/*73*/      {"MOV",  "M,E"     , 0                },
+/*74*/      {"MOV",  "M,H"     , 0                },
+/*75*/      {"MOV",  "M,L"     , 0                },
+/*76*/      {"HLT",  ""        , 0                },
+/*77*/      {"MOV",  "M,A"     , 0                },
+/*78*/      {"MOV",  "A,B"     , 0                },
+/*79*/      {"MOV",  "A,C"     , 0                },
+/*7A*/      {"MOV",  "A,D"     , 0                },
+/*7B*/      {"MOV",  "A,E"     , 0                },
+/*7C*/      {"MOV",  "A,H"     , 0                },
+/*7D*/      {"MOV",  "A,L"     , 0                },
+/*7E*/      {"MOV",  "A,M"     , 0                },
+/*7F*/      {"MOV",  "A,A"     , 0                },
+
+/*80*/      {"ADD",  "A,B"     , 0                },
+/*81*/      {"ADD",  "A,C"     , 0                },
+/*82*/      {"ADD",  "A,D"     , 0                },
+/*83*/      {"ADD",  "A,E"     , 0                },
+/*84*/      {"ADD",  "A,H"     , 0                },
+/*85*/      {"ADD",  "A,L"     , 0                },
+/*86*/      {"ADD",  "A,M"     , 0                },
+/*87*/      {"ADD",  "A,A"     , 0                },
+/*88*/      {"ADC",  "A,B"     , 0                },
+/*89*/      {"ADC",  "A,C"     , 0                },
+/*8A*/      {"ADC",  "A,D"     , 0                },
+/*8B*/      {"ADC",  "A,E"     , 0                },
+/*8C*/      {"ADC",  "A,H"     , 0                },
+/*8D*/      {"ADC",  "A,L"     , 0                },
+/*8E*/      {"ADC",  "A,M"     , 0                },
+/*8F*/      {"ADC",  "A,A"     , 0                },
+
+/*90*/      {"SUB",  "B"       , 0                },
+/*91*/      {"SUB",  "C"       , 0                },
+/*92*/      {"SUB",  "D"       , 0                },
+/*93*/      {"SUB",  "E"       , 0                },
+/*94*/      {"SUB",  "H"       , 0                },
+/*95*/      {"SUB",  "L"       , 0                },
+/*96*/      {"SUB",  "M"       , 0                },
+/*97*/      {"SUB",  "A"       , 0                },
+/*98*/      {"SBB",  "A,B"     , 0                },
+/*99*/      {"SBB",  "A,C"     , 0                },
+/*9A*/      {"SBB",  "A,D"     , 0                },
+/*9B*/      {"SBB",  "A,E"     , 0                },
+/*9C*/      {"SBB",  "A,H"     , 0                },
+/*9D*/      {"SBB",  "A,L"     , 0                },
+/*9E*/      {"SBB",  "A,M"     , 0                },
+/*9F*/      {"SBB",  "A,A"     , 0                },
+
+/*A0*/      {"ANA",  "B"       , 0                },
+/*A1*/      {"ANA",  "C"       , 0                },
+/*A2*/      {"ANA",  "D"       , 0                },
+/*A3*/      {"ANA",  "E"       , 0                },
+/*A4*/      {"ANA",  "H"       , 0                },
+/*A5*/      {"ANA",  "L"       , 0                },
+/*A6*/      {"ANA",  "M"       , 0                },
+/*A7*/      {"ANA",  "A"       , 0                },
+/*A8*/      {"XRA",  "B"       , 0                },
+/*A9*/      {"XRA",  "C"       , 0                },
+/*AA*/      {"XRA",  "D"       , 0                },
+/*AB*/      {"XRA",  "E"       , 0                },
+/*AC*/      {"XRA",  "H"       , 0                },
+/*AD*/      {"XRA",  "L"       , 0                },
+/*AE*/      {"XRA",  "M"       , 0                },
+/*AF*/      {"XRA",  "A"       , 0                },
+
+/*B0*/      {"ORA",   "B"      , 0                },
+/*B1*/      {"ORA",   "C"      , 0                },
+/*B2*/      {"ORA",   "D"      , 0                },
+/*B3*/      {"ORA",   "E"      , 0                },
+/*B4*/      {"ORA",   "H"      , 0                },
+/*B5*/      {"ORA",   "L"      , 0                },
+/*B6*/      {"ORA",   "M"      , 0                },
+/*B7*/      {"ORA",   "A"      , 0                },
+/*B8*/      {"CMP",   "B"      , 0                },
+/*B9*/      {"CMP",   "C"      , 0                },
+/*BA*/      {"CMP",   "D"      , 0                },
+/*BB*/      {"CMP",   "E"      , 0                },
+/*BC*/      {"CMP",   "H"      , 0                },
+/*BD*/      {"CMP",   "L"      , 0                },
+/*BE*/      {"CMP",   "M"      , 0                },
+/*BF*/      {"CMP",   "A"      , 0                },
+
+/*C0*/      {"RNZ",  ""        , 0                },
+/*C1*/      {"POP",  "B"       , 0                },
+/*C2*/      {"JNZ",  "w"       , REFFLAG | CODEREF},
+/*C3*/      {"JMP",  "w"       , LFFLAG | REFFLAG | CODEREF},
+/*C4*/      {"CNZ",  "w"       , REFFLAG | CODEREF},
+/*C5*/      {"PUSH", "B"       , 0                },
+/*C6*/      {"ADI",  "b"       , 0                },
+/*C7*/      {"RST",  "0x"      , LFFLAG           },
+/*C8*/      {"RZ",   ""        , 0                },
+/*C9*/      {"RET",  ""        , LFFLAG           },
+/*CA*/      {"JZ",   "w"       , REFFLAG | CODEREF},
+/*CB*/      {"",     ""        , 0                }, // RSTV
+/*CC*/      {"CZ",   "w"       , REFFLAG | CODEREF},
+/*CD*/      {"CALL", "w"       , REFFLAG | CODEREF},
+/*CE*/      {"ACI",  "b"       , 0                },
+/*CF*/      {"RST",  "1x"      , 0                },
+
+/*D0*/      {"RNC",  ""        , 0                },
+/*D1*/      {"POP",  "D"       , 0                },
+/*D2*/      {"JNC",  "w"       , REFFLAG | CODEREF},
+/*D3*/      {"OUT",  "b"       , 0                },
+/*D4*/      {"CNC",  "w"       , REFFLAG | CODEREF},
+/*D5*/      {"PUSH", "D"       , 0                },
+/*D6*/      {"SUI",  "b"       , 0                },
+/*D7*/      {"RST",  "2x"      , 0                },
+/*D8*/      {"RC",   ""        , 0                },
+/*D9*/      {"",     ""        , 0                }, // SHLX
+/*DA*/      {"JC",   "w"       , REFFLAG | CODEREF},
+/*DB*/      {"IN",   "b"       , 0                },
+/*DC*/      {"CC",   "w"       , REFFLAG | CODEREF},
+/*DD*/      {"",     ""        , 0                }, // JNK a16
+/*DE*/      {"SBI",  "b"       , 0                },
+/*DF*/      {"RST",  "3x"      , 0                },
+
+/*E0*/      {"RPO",  ""        , 0                },
+/*E1*/      {"POP",  "H"       , 0                },
+/*E2*/      {"JPO",  "w"       , REFFLAG | CODEREF},
+/*E3*/      {"XTHL", ""        , 0                },
+/*E4*/      {"CPO",  "w"       , REFFLAG | CODEREF},
+/*E5*/      {"PUSH", "H"       , 0                },
+/*E6*/      {"ANI",  "b"       , 0                },
+/*E7*/      {"RST",  "4x"      , 0                },
+/*E8*/      {"RPE",  ""        , 0                },
+/*E9*/      {"PCHL", ""        , LFFLAG           },
+/*EA*/      {"JPE",  "w"       , REFFLAG | CODEREF},
+/*EB*/      {"XCHG", ""        , 0                },
+/*EC*/      {"CPE",  "w"       , REFFLAG | CODEREF},
+/*ED*/      {"",     ""        , 0                }, // LHLX
+/*EE*/      {"XRI",  "b"       , 0                },
+/*EF*/      {"RST",  "5x"      , 0                },
+
+/*F0*/      {"RET",  "P"       , 0                },
+/*F1*/      {"POP",  "PSW"     , 0                },
+/*F2*/      {"JP",   "w"       , REFFLAG | CODEREF},
+/*F3*/      {"DI",   ""        , 0                },
+/*F4*/      {"CP",   "w"       , REFFLAG | CODEREF},
+/*F5*/      {"PUSH", "PSW"     , 0                },
+/*F6*/      {"ORI",  "b"       , 0                },
+/*F7*/      {"RST",  "6x"      , 0                },
+/*F8*/      {"RM",   ""        , 0                },
+/*F9*/      {"SPHL", ""        , 0                },
+/*FA*/      {"JM",   "w"       , REFFLAG | CODEREF},
+/*FB*/      {"EI",   ""        , 0                },
+/*FC*/      {"CM",   "w"       , REFFLAG | CODEREF},
+/*FD*/      {"",     ""        , 0                }, // JK a16
+/*FE*/      {"CPI",  "b"       , 0                },
+/*FF*/      {"RST",  "7x"      , 0                }
+};
 
 // 8085 main page instruction changes
 static const struct SearchInstrRec Z80_opcdTable_8085[] =
@@ -1365,6 +1653,7 @@ int DisZ80::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
             }
             break;
 
+        case CPU_8085U:
         case CPU_8085:
             // look up 8085 instruction overrides
             instr = SearchInstr(Z80_opcdTable_8085, i);
@@ -1393,7 +1682,11 @@ int DisZ80::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
     }
 
     if (!instr) {
-        instr = &Z80_opcdTable[i];
+        if (_zilog) {
+            instr = &Z80_opcdTable[i];
+        } else {
+            instr = &I8085_opcdTable[i];
+        }
     }
 
     // handle opcode according to instruction type

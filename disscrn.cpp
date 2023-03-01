@@ -649,6 +649,12 @@ void DisScrn::status_line()
 
 void DisScrn::print_screen()
 {
+    // recovery attempt in case _sel_row has fallen off the screen
+    // don't want to do this recursively because it's much more difficult
+    // to do it exactly once that way
+    bool tried = false;
+TryAgain:
+
     // set disassembly to screen format
     disline.line_cols = disline.SCRN_COLS;
 
@@ -752,8 +758,15 @@ void DisScrn::print_screen()
 
     // problem if _sel_row not found
     // what to do if this happens? probably could set _top = _sel and try again
+    // might also want to check if it's > max_row()
 
-    assert(_sel_row >= 0);
+    if (_sel_row < 0 && !tried) {
+        _top = _sel;
+        tried = true;
+        goto TryAgain;
+    } else {
+        assert(_sel_row >= 0);
+    }
 }
 
 

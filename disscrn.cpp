@@ -74,6 +74,9 @@ struct cmd_char_t char_cmds[] =
 
     { '!',  &DisScrn::do_cmd_cln }, // clean up current label if not referenced
 
+    { '"',  &DisScrn::do_cmd_hint }, // toggle hint flags in current instr
+    { '$',  &DisScrn::do_cmd_defhint }, // toggle default hint flags
+
     {  0,   NULL  }
 };
 
@@ -2450,6 +2453,41 @@ void DisScrn::do_cmd_mor()
     }
 
     print_screen();
+}
+
+
+// =====================================================
+// handle '"' command
+
+void DisScrn::do_cmd_hint()
+{
+    // toggle hint flags in current instr
+    int hint = rom.get_hint(_sel.addr);
+    hint = (hint + 1) & 3;
+    rom.set_hint(_sel.addr, hint);
+
+    // print message with new hint value
+    char s[256];
+    sprintf(s, "instr hint set to %d", hint);
+    error(s);
+
+    // redraw everything
+    print_screen();
+}
+
+
+// =====================================================
+// handle '$' command
+
+void DisScrn::do_cmd_defhint()
+{
+    // increment default hint value
+    rom._defhint = (rom._defhint + 1) & 3;
+
+    // print message with new defhint value
+    char s[256];
+    sprintf(s, "defhint set to %d", rom._defhint);
+    error(s);
 }
 
 

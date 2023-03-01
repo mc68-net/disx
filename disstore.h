@@ -47,12 +47,14 @@ enum MemAttr {
     ATTR_LCODE = 0x02,  // code label at this line
     ATTR_LXXXX = 0x03,  // X label at this line
     ATTR_LMASK = 0x03,  // mask for label bits
+    ATTR_HMASK = 0x60,  // mask for hint bits
+    ATTR_HSHFT = 5,     // shift for hint bits
 
     ATTR_LF0   = 0x04,  // LF before line (manually selected blank line)
     ATTR_LF1   = 0x08,  // LF after line (from disassembler's lfFlag)
     ATTR_NOREF = 0x10,  // do not turn references to this address into a label
-    ATTR_NOTRC = 0x20,  // do not turn references from this address into a label
-//             = 0x40,  // 
+    ATTR_HINT1 = 0x20,  // hint flags for individual disassemblers (these are used
+    ATTR_HINT2 = 0x40,  // for things like 8042 bank select and 65C816 operand sizes)
     ATTR_CONT  = 0x80,  // continuation from previous address
 };
 
@@ -65,8 +67,10 @@ public:                 // attr bits
     char    _fname[256];// file name from load_file
     bool    _changed;   // true if attr or type has been changed since last save
 
-// Z-80 specific settings
-// placed here to not need to know if the disassembler even exists
+    uint8_t _defhint;   // default value for ATTR_HINT1 and ATTR_HINT2 (0..3)
+
+    // Z-80 specific settings
+    // placed here to not need to know if the disassembler even exists
     uint8_t _rst_xtra[8]; // extra bytes for each RST
 
 private:
@@ -78,14 +82,16 @@ private:
     uint8_t _wordsz;    // 0=8-bit, 1=16-bit word? (data array address scaling)
 
 public:
-    DisStore() :  _base(0), _size(0), _data(NULL), _attr(NULL), _type(0), _wordsz(0) { };
+    DisStore() : _base(0), _size(0), _data(NULL), _attr(NULL), _type(0), _wordsz(0) { };
     ~DisStore();
     int get_end() { return (int) _base + (int) _size; }
     int get_data(addr_t addr);
     int get_attr(addr_t addr);
+    int get_hint(addr_t addr);
     int get_type(addr_t addr);
 
     void set_attr(addr_t addr, int attr);
+    void set_hint(addr_t addr, int hint);
     void set_type(addr_t addr, int type);
 
     void set_attr_flag(addr_t addr, int attr);

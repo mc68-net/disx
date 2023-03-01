@@ -136,6 +136,8 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_nxt();          // handle '.' command
     void do_cmd_les();          // handle '(' command
     void do_cmd_mor();          // handle ')' command
+    void do_cmd_hint();         // handle '"' command
+    void do_cmd_defhint();      // handle '$' command
 };
 
 

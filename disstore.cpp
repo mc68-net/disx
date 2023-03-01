@@ -86,6 +86,14 @@ int DisStore::get_attr(addr_t addr)
 
 
 // =====================================================
+//  uint8_t get_hint(addr_t addr);
+int DisStore::get_hint(addr_t addr)
+{
+    return (get_attr(addr) & ATTR_HMASK) >> ATTR_HSHFT;
+}
+
+
+// =====================================================
 //  uint8_t get_type(addr_t addr);
 int DisStore::get_type(addr_t addr)
 {
@@ -108,6 +116,15 @@ void DisStore::set_attr(addr_t addr, int attr)
             _changed = true;
         }
     }
+}
+
+
+// =====================================================
+//  void set_hint(addr_t addr, int hint);
+void DisStore::set_hint(addr_t addr, int hint)
+{
+    set_attr(addr, (get_attr(addr) & ~ATTR_HMASK) |
+                    ((hint << ATTR_HSHFT) & ATTR_HMASK));
 }
 
 
@@ -225,9 +242,13 @@ void DisStore::set_instr(addr_t addr, int len, int type, bool lfflag)
     }
     set_type(addr++, type);
 
+    // set hint flags in first byte
+    set_hint(addr, _defhint);
+
     // set following bytes (if any) to type/ATTR_CONT
     while (--len) {
         set_attr_flag(addr, ATTR_CONT);
+        set_hint(addr, 0);
         set_type(addr++, type);
     }
 

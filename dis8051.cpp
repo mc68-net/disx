@@ -18,7 +18,6 @@ public:
 
 
 Dis8051 cpu_8051("8051", 0, BIG_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
-Dis8051 cpu_8032("8032", 0, BIG_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
 
 
 Dis8051::Dis8051(const char *name, int subtype, int endian, int addrwid,

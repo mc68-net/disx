@@ -89,19 +89,27 @@ enum InstType {
     iStackRel,  // d,S
     iStackIndY, // (d,S),Y
     iRelativeL, // rl
-    iBlockMove  // MVN,MVP
+    iBlockMove, // MVN,MVP
+    // Because of the M and X flags, some 65816 instructions can have variable
+    // immediate operand lengths determined by code that was executed elsewhere.
+    // These need manually-set hint flags to be disassembled properly.
+    iImmediateA,// immediate for A/C (.LONGA ON/OFF) 16-bit when M flag clear
+    iImmediateI,// immediate for X/Y (.LONGI ON/OFF) 16-bit when X flag clear
 };
 
-struct InstrRec
-{
+enum {
+    // meaning of hint flags for 65816
+    HINT_LONGI = 1, // hint bit for .LONGI (X/Y immediate 8/16 bits)
+    HINT_LONGA = 2, // hint bit for .LONGA (A/C immediate 8/16 bits)
+};
+
+struct InstrRec {
     const char      *op;    // mnemonic
     enum InstType   typ;    // typ
     uint8_t         lfref;  // lfFlag/refFlag/codeRef
 };
 
-static const struct InstrRec
-opcdTable6502[] =
-{
+static const struct InstrRec opcdTable6502[] = {
     // op      typ            lfref
     {"BRK", iImplied  , 0                },  // 00
     {"ORA", iIndirectX, 0                },  // 01
@@ -374,9 +382,9 @@ opcdTable6502[] =
     {"SBC", iAbsoluteX, 0                },  // FD
     {"INC", iAbsoluteX, 0                },  // FE
     {""   , iImplied  , 0                }   // FF
-},
-opcdTable6502U[] =
-{
+};
+
+static const struct InstrRec opcdTable6502U[] = {
     // op      typ            lfref
     {"BRK", iImplied  , 0                },  // 00
     {"ORA", iIndirectX, 0                },  // 01
@@ -649,9 +657,9 @@ opcdTable6502U[] =
     {"SBC", iAbsoluteX, 0                },  // FD
     {"INC", iAbsoluteX, 0                },  // FE
     {"ISB", iAbsoluteX, 0                }   // FF
-},
-opcdTable65C02[] =
-{
+};
+
+static const struct InstrRec opcdTable65C02[] = {
     // op      typ            lfref
     {"BRK" , iImplied  , 0                },  // 00
     {"ORA" , iIndirectX, 0                },  // 01
@@ -924,9 +932,9 @@ opcdTable65C02[] =
     {"SBC" , iAbsoluteX, 0                },  // FD
     {"INC" , iAbsoluteX, 0                },  // FE
     {"BBS7", iBBRBBS   , REFFLAG | CODEREF},  // FF
-},
-opcdTable65C816[] =
-{
+};
+
+static const struct InstrRec opcdTable65C816[] = {
     // op      typ            lfref
     {"BRK", iImplied  , 0                },  // 00
     {"ORA", iIndirectX, 0                },  // 01
@@ -937,7 +945,7 @@ opcdTable65C816[] =
     {"ASL", iZeroPage , 0                },  // 06
     {"ORA", iDirIndirL, 0                },  // 07
     {"PHP", iImplied  , 0                },  // 08
-    {"ORA", iImmediate, 0                },  // 09
+    {"ORA", iImmediateA,0                },  // 09
     {"ASL", iAccum    , 0                },  // 0A
     {"PHD", iImplied  , 0                },  // 0B
     {"TSB", iAbsolute , 0                },  // 0C
@@ -971,7 +979,7 @@ opcdTable65C816[] =
     {"ROL", iZeroPage , 0                },  // 26
     {"AND", iDirIndirL, 0                },  // 27
     {"PLP", iImplied  , 0                },  // 28
-    {"AND", iImmediate, 0                },  // 29
+    {"AND", iImmediateA,0                },  // 29
     {"ROL", iAccum    , 0                },  // 2A
     {"PLD", iImplied  , 0                },  // 2B
     {"BIT", iAbsolute , 0                },  // 2C
@@ -1005,7 +1013,7 @@ opcdTable65C816[] =
     {"LSR", iZeroPage , 0                },  // 46
     {"EOR", iDirIndirL, 0                },  // 47
     {"PHA", iImplied  , 0                },  // 48
-    {"EOR", iImmediate, 0                },  // 49
+    {"EOR", iImmediateA,0                },  // 49
     {"LSR", iAccum    , 0                },  // 4A
     {"PHK", iImplied  , 0                },  // 4B
     {"JMP", iAbsolute , LFFLAG | REFFLAG | CODEREF},  // 4C
@@ -1039,7 +1047,7 @@ opcdTable65C816[] =
     {"ROR", iZeroPage , 0                },  // 66
     {"ADC", iDirIndirL, 0                },  // 67
     {"PLA", iImplied  , 0                },  // 68
-    {"ADC", iImmediate, 0                },  // 69
+    {"ADC", iImmediateA,0                },  // 69
     {"ROR", iAccum    , 0                },  // 6A
     {"RTL", iImplied  , 0                },  // 6B
     {"JMP", iIndirect , LFFLAG           },  // 6C
@@ -1073,7 +1081,7 @@ opcdTable65C816[] =
     {"STX", iZeroPage , 0                },  // 86
     {"STA", iDirIndirL, 0                },  // 87
     {"DEY", iImplied  , 0                },  // 88
-    {"BIT", iImmediate, 0                },  // 89
+    {"BIT", iImmediateA,0                },  // 89
     {"TXA", iImplied  , 0                },  // 8A
     {"PHB", iImplied  , 0                },  // 8B
     {"STY", iAbsolute , 0                },  // 8C
@@ -1098,16 +1106,16 @@ opcdTable65C816[] =
     {"STZ", iAbsoluteX, 0                },  // 9E
     {"STA", iAbsLongX , 0                },  // 9F
 
-    {"LDY", iImmediate, 0                },  // A0
+    {"LDY", iImmediateI,0                },  // A0 // with X flag clear
     {"LDA", iIndirectX, 0                },  // A1
-    {"LDX", iImmediate, 0                },  // A2
+    {"LDX", iImmediateI,0                },  // A2 // with X flag clear
     {"LDA", iStackRel , 0                },  // A3
     {"LDY", iZeroPage , 0                },  // A4
     {"LDA", iZeroPage , 0                },  // A5
     {"LDX", iZeroPage , 0                },  // A6
     {"LDA", iDirIndirL, 0                },  // A7
     {"TAY", iImplied  , 0                },  // A8
-    {"LDA", iImmediate, 0                },  // A9
+    {"LDA", iImmediateA,0                },  // A9
     {"TAX", iImplied  , 0                },  // AA
     {"PLB", iImplied  , 0                },  // AB
     {"LDY", iAbsolute , 0                },  // AC
@@ -1132,7 +1140,7 @@ opcdTable65C816[] =
     {"LDX", iAbsoluteY, 0                },  // BE
     {"LDA", iAbsLongX , 0                },  // BF
 
-    {"CPY", iImmediate, 0                },  // C0
+    {"CPY", iImmediateI,0                },  // C0 // with X flag clear
     {"CMP", iIndirectX, 0                },  // C1
     {"REP", iImmediate, 0                },  // C2
     {"CMP", iStackRel , 0                },  // C3
@@ -1141,7 +1149,7 @@ opcdTable65C816[] =
     {"DEC", iZeroPage , 0                },  // C6
     {"CMP", iDirIndirL, 0                },  // C7
     {"INY", iImplied  , 0                },  // C8
-    {"CMP", iImmediate, 0                },  // C9
+    {"CMP", iImmediateA,0                },  // C9
     {"DEX", iImplied  , 0                },  // CA
     {"WAI", iImplied  , 0                },  // CB
     {"CPY", iAbsolute , 0                },  // CC
@@ -1166,7 +1174,7 @@ opcdTable65C816[] =
     {"DEC", iAbsoluteX, 0                },  // DE
     {"CMP", iAbsLongX , 0                },  // DF
 
-    {"CPX", iImmediate, 0                },  // E0
+    {"CPX", iImmediateI,0                },  // E0 // with X flag clear
     {"SBC", iIndirectX, 0                },  // E1
     {"SEP", iImmediate, 0                },  // E2
     {"SBC", iStackRel , 0                },  // E3
@@ -1175,7 +1183,7 @@ opcdTable65C816[] =
     {"INC", iZeroPage , 0                },  // E6
     {"SBC", iDirIndirL, 0                },  // E7
     {"INX", iImplied  , 0                },  // E8
-    {"SBC", iImmediate, 0                },  // E9
+    {"SBC", iImmediateA,0                },  // E9
     {"NOP", iImplied  , 0                },  // EA
     {"XBA", iImplied  , 0                },  // EB
     {"CPX", iAbsolute , 0                },  // EC
@@ -1225,8 +1233,8 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
     ad   = addr;
     i    = ReadByte(ad++);
-    len = 1;
-    addr_t ra = 0;
+    len  = 1;
+    addr_t ra = 0; // reference address
 
     // select the opcode table for this subtype
     switch (_subtype) {
@@ -1250,6 +1258,25 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
         typ = iImplied;
     }
 
+    // 65816: handle 8 vs 16 bit immediate by hint flags
+    if (_subtype == CPU_65C816) {
+        int hint = rom.get_hint(addr);
+        switch (typ) {
+            // if the hint flag isn't set, make it an 8-bit immediate
+            case iImmediateA: // for A/C (.LONGA ON/OFF)
+                if (!(hint & HINT_LONGA)) {
+                    typ = iImmediate;
+                }
+                break;
+
+            case iImmediateI: // for X/Y (.LONGI ON/OFF)
+                if (!(hint & HINT_LONGI)) {
+                    typ = iImmediate;
+                }
+                break;
+        }
+    }
+
     switch (typ) {
         case iImplied:
             /* nothing */;
@@ -1262,6 +1289,22 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
         case iImmediate:
             sprintf(parms, "#$%.2X", ReadByte(ad++));
             len++;
+            break;
+
+        case iImmediateA: // for A/C (.LONGA ON/OFF)
+#if 0 // sometimes an address is used with ADC #xxxx etc.
+            sprintf(parms, "#$%.4X", ReadWord(ad)); // don't make it a ref addr
+            ad += 2;
+            len += 2;
+            break;
+#endif
+        case iImmediateI: // for X/Y (.LONGI ON/OFF)
+            ra = ReadWord(ad);
+            ad += 2;
+            len += 2;
+            *parms++ = '#';
+            *parms = 0;
+            RefStr(ra, parms, lfref, refaddr);
             break;
 
         case iRelative:
@@ -1303,6 +1346,11 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             ra = ReadWord(ad);
             ad += 2;
             len += 2;
+            if (ra < 0x100) {
+                // force 16-bit mode
+                *parms++ = '>';
+                *parms = 0;
+            }
             RefStr(ra, parms, lfref, refaddr);
             break;
 
@@ -1310,6 +1358,17 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             ra = ReadWord(ad);
             ad += 2;
             len += 2;
+            if (ra < 0x100) {
+                // force 16-bit mode
+                *parms++ = '>';
+                *parms = 0;
+            }
+//            if (ra < 0x10000) {
+//                // force 24-bit mode
+//                *parms++ = '>';
+//                *parms++ = '>';
+//                *parms = 0;
+//            }
             RefStr(ra, s, lfref, refaddr);
             sprintf(parms, "%s,X", s);
             break;
@@ -1363,6 +1422,12 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             ra = ReadWord(ad) + ReadByte(ad+2) * 65536;
             ad += 3;
             len += 3;
+            if (ra < 0x10000) {
+                // force 24-bit mode
+                *parms++ = '>';
+                *parms++ = '>';
+                *parms = 0;
+            }
             RefStr6(ra, s, lfref, refaddr);
             sprintf(parms, "%s", s);
             break;
@@ -1371,6 +1436,12 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             ra = ReadWord(ad) + ReadByte(ad+2) * 65536;
             ad += 3;
             len += 3;
+            if (ra < 0x10000) {
+                // force 24-bit mode
+                *parms++ = '>';
+                *parms++ = '>';
+                *parms = 0;
+            }
             RefStr6(ra, s, lfref, refaddr);
             sprintf(parms, "%s,X", s);
             break;
@@ -1391,10 +1462,12 @@ int Dis6502::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
         case iStackRel:  // d,S
             sprintf(parms, "$%.2X,S", ReadByte(ad++));
+            len++;
             break;
 
         case iStackIndY: // (d,S),Y
             sprintf(parms, "($%.2X,S),Y", ReadByte(ad++));
+            len++;
             break;
 
         case iRelativeL:

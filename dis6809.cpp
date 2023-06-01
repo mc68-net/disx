@@ -31,7 +31,7 @@ enum InstType {
 };
 
 
-Dis6809:: Dis6809(const char *name, int subtype, int endian, int addrwid,
+Dis6809::Dis6809(const char *name, int subtype, int endian, int addrwid,
                char curAddrChr, char hexChr, const char *byteOp,
                const char *wordOp, const char *longOp)
 {

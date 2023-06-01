@@ -2457,7 +2457,7 @@ void DisScrn::do_cmd_mor()
 
 
 // =====================================================
-// handle '"' command
+// handle '"' command to change hint flags of current instr
 
 void DisScrn::do_cmd_hint()
 {
@@ -2471,13 +2471,24 @@ void DisScrn::do_cmd_hint()
     sprintf(s, "instr hint set to %d", hint);
     error(s);
 
+    // re-disassemble current instruction and get its new length
+    CPU *cpu = CPU::get_cpu(rom.get_type(_sel.addr));
+    char opcode[20] = {0};
+    char parms[256] = {0};
+    int lfref = 0;
+    addr_t refaddr = 0;
+    int len = cpu->dis_line(_sel.addr, opcode, parms, lfref, refaddr);
+
+    // update length and clean up broken instructions that follow
+    rom.set_instr(_sel.addr, len, rom.get_type(_sel.addr));
+
     // redraw everything
     print_screen();
 }
 
 
 // =====================================================
-// handle '$' command
+// handle '$' command to change default hint flags
 
 void DisScrn::do_cmd_defhint()
 {

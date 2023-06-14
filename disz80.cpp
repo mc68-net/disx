@@ -95,7 +95,6 @@ struct SearchInstrRec {
 };
 
 
-// =====================================================
 static const struct InstrRec *SearchInstr(const struct SearchInstrRec *table, int opcode)
 {
     for ( ; table->instr.op; table++) {
@@ -106,6 +105,10 @@ static const struct InstrRec *SearchInstr(const struct SearchInstrRec *table, in
 
     return NULL;
 }
+
+
+// =====================================================
+
 
 // Intel 8080 opcodes
 static const struct InstrRec I8085_opcdTable[] =
@@ -297,22 +300,22 @@ static const struct InstrRec I8085_opcdTable[] =
 /*AE*/      {"XRA",  "M"       , 0                },
 /*AF*/      {"XRA",  "A"       , 0                },
 
-/*B0*/      {"ORA",   "B"      , 0                },
-/*B1*/      {"ORA",   "C"      , 0                },
-/*B2*/      {"ORA",   "D"      , 0                },
-/*B3*/      {"ORA",   "E"      , 0                },
-/*B4*/      {"ORA",   "H"      , 0                },
-/*B5*/      {"ORA",   "L"      , 0                },
-/*B6*/      {"ORA",   "M"      , 0                },
-/*B7*/      {"ORA",   "A"      , 0                },
-/*B8*/      {"CMP",   "B"      , 0                },
-/*B9*/      {"CMP",   "C"      , 0                },
-/*BA*/      {"CMP",   "D"      , 0                },
-/*BB*/      {"CMP",   "E"      , 0                },
-/*BC*/      {"CMP",   "H"      , 0                },
-/*BD*/      {"CMP",   "L"      , 0                },
-/*BE*/      {"CMP",   "M"      , 0                },
-/*BF*/      {"CMP",   "A"      , 0                },
+/*B0*/      {"ORA",  "B"       , 0                },
+/*B1*/      {"ORA",  "C"       , 0                },
+/*B2*/      {"ORA",  "D"       , 0                },
+/*B3*/      {"ORA",  "E"       , 0                },
+/*B4*/      {"ORA",  "H"       , 0                },
+/*B5*/      {"ORA",  "L"       , 0                },
+/*B6*/      {"ORA",  "M"       , 0                },
+/*B7*/      {"ORA",  "A"       , 0                },
+/*B8*/      {"CMP",  "B"       , 0                },
+/*B9*/      {"CMP",  "C"       , 0                },
+/*BA*/      {"CMP",  "D"       , 0                },
+/*BB*/      {"CMP",  "E"       , 0                },
+/*BC*/      {"CMP",  "H"       , 0                },
+/*BD*/      {"CMP",  "L"       , 0                },
+/*BE*/      {"CMP",  "M"       , 0                },
+/*BF*/      {"CMP",  "A"       , 0                },
 
 /*C0*/      {"RNZ",  ""        , 0                },
 /*C1*/      {"POP",  "B"       , 0                },

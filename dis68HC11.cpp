@@ -1435,7 +1435,14 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
 
     // rip-stop checks
     if (opcode[0]) {
-        switch (ReadByte(addr)) {
+        int op = ReadByte(addr);
+        switch (op) {
+            case 0x01: // repeated NOP
+            case 0x3F: // repeated SWI
+                if (ReadByte(addr+1) == op) {
+                    lfref |= RIPSTOP;
+                }
+                break;
             case 0xFF: // STX $FFFF
                 if ((ReadByte(addr+1) == 0xFF) &&
                     (ReadByte(addr+2) == 0xFF)) {

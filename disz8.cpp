@@ -11,6 +11,7 @@ public:
            const char *wordOp, const char *longOp);
 
     virtual int dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr);
+    void Regnum(unsigned char reg, char *p);
 };
 
 
@@ -328,6 +329,22 @@ static const struct InstrRec Z8_opcdTable[] =
 };
 
 
+static const char *Fregs[16] = {
+    "SIO"  , "TMR"  , "T1"   , "PRE1" , "T0"   , "PRE0" , "P2M"  , "P3M"  ,
+    "P01M" , "IPR"  , "IRQ"  , "IMR"  , "FLAGS", "RP"   , "SPH"  , "SPL"
+};
+
+
+void DisZ8::Regnum(unsigned char reg, char *p)
+{
+    if (reg >= 0xF0) {
+        strcpy(p, Fregs[reg - 0xF0]);
+    } else {
+        H2Str(reg, p);
+    }
+}
+
+
 int DisZ8::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr)
 {
     unsigned short  ad;
@@ -370,7 +387,7 @@ int DisZ8::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &
                 if ((i & 0xF0) == 0xE0 && (opcd & 0x0F) != 0x09 && opcd != 0xE4) {
                     sprintf(p, "R%d", i & 0x0F);
                 } else {
-                    H2Str(i, p);
+                    Regnum(i, p);
                 }
                 p += strlen(p);
                 break;
@@ -382,8 +399,7 @@ int DisZ8::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &
                 if ((i & 0xF0) == 0xE0) {
                     sprintf(p, "R%d", i & 0x0F);
                 } else {
-//                  sprintf(p, "%.2X", i);
-                    H2Str(i, p);
+                    Regnum(i, p);
                 }
                 p += strlen(p);
                 break;

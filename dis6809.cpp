@@ -1387,7 +1387,12 @@ int Dis6809::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             ra = ReadWord(ad);
             ad += 2;
             len += 2;
-            RefStr(ra, parms, lfref, refaddr);
+            RefStr(ra, s, lfref, refaddr);
+            if (((ra >> 8) & 0xFF) == dpreg) {
+                sprintf(parms, ">%s", s);
+            } else {
+                strcpy(parms, s);
+            }
             break;
 
         case iTfrExg:
@@ -1451,6 +1456,7 @@ int Dis6809::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 /*
 int Dis6809::CustomCommand(char *word)
 {
+    // note that these values currently would not be saved in the .ctl file
          if (strcmp(word, "DPREG") == 0) { GetWord(word); using_dpreg = true; dpreg = HexVal(word) * 256; }
     else if (strcmp(word, "SETDP") == 0) { GetWord(word); using_dpreg = true; dpreg = HexVal(word) * 256; }
     else return 0;

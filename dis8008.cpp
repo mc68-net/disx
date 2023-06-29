@@ -433,16 +433,15 @@ int Dis8008::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
         // find the previous instruction for this CPU
         addr_t prev = find_prev_instr(addr);
         if (prev) {
-#if 0 // this is from the 8080 disassembler
             int op = ReadByte(addr);
-            // don't allow doubled LD r,r instruction
-            if (0x40 <= op && op <= 0x7F) {
+            // don't allow doubled MOV r,r instruction
+            if (0xC1 <= op && op <= 0xFE) {
                 if (ReadByte(prev) == op) {
                     lfref |= RIPSTOP;
                 }
             } else
             switch (op) {
-                case 0x00: // three NOP in a row
+                case 0xC0: // three NOP in a row
                     if (ReadByte(prev) == op) {
                         prev = find_prev_instr(prev);
                         if (ReadByte(prev) == op) {
@@ -450,13 +449,12 @@ int Dis8008::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
                         }
                     }
                     break;
-                case 0xFF: // two RST 38H in a row
+                case 0xFF: // two HLT in a row
                     if (ReadByte(prev) == op) {
                         lfref |= RIPSTOP;
                     }
                     break;
             }
-#endif
         }
     }
 

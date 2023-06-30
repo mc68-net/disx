@@ -7,14 +7,17 @@
 #include "disscrn.h" // for HexVal
 #include <errno.h>
 
-CommentDB cmt;
+// global scope comment storage object
+SymDB cmt;
+// global scope comment storage object
+SymDB sym;
 
 
 // =====================================================
 // if found, returns address of matching comment
 // otherwise returns address of comment to insert after
 // or NULL to insert before first comment
-CommentDB::comment *CommentDB::find_comment(addr_t addr)
+SymDB::comment *SymDB::find_sym(addr_t addr)
 {
     comment *q = NULL; // previous comment
     comment *p = head;
@@ -52,11 +55,11 @@ CommentDB::comment *CommentDB::find_comment(addr_t addr)
 
 
 // =====================================================
-const char *CommentDB::get_comment(addr_t addr)
+const char *SymDB::get_sym(addr_t addr)
 {
-//printf("get_comment(%.8X) = ", (int) addr);
+//printf("get_sym(%.8X) = ", (int) addr);
 #if 1
-    comment *p = find_comment(addr);
+    comment *p = find_sym(addr);
 
     if (p && addr == p->addr) {
 //printf("'%s'\n", p->text);
@@ -78,17 +81,17 @@ const char *CommentDB::get_comment(addr_t addr)
 
 
 // =====================================================
-void CommentDB::set_comment(addr_t addr, const char *s)
+void SymDB::set_sym(addr_t addr, const char *s)
 {
 (void) addr;
 (void) s;
 
-//printf("set_comment(%.8X, ", (int) addr);
+//printf("set_sym(%.8X, ", (int) addr);
 //if (s) printf("'%s')\n", s);
 //  else printf("NULL)\n");
 
     // first try to find the comment
-    comment *p = find_comment(addr);
+    comment *p = find_sym(addr);
 
     // is it the one we were looking for?
     if (!p || addr != p->addr) {
@@ -99,7 +102,7 @@ void CommentDB::set_comment(addr_t addr, const char *s)
         }
 
         // create a new comment object
-        comment *c = new_comment(addr, s);
+        comment *c = new_sym(addr, s);
 
         // link it into the list after p
         if (p) {
@@ -139,17 +142,17 @@ void CommentDB::set_comment(addr_t addr, const char *s)
                 }
             }
             // dispose of the old comment
-            free_comment(p);
+            free_sym(p);
         }
     }
 }
 
 
 // =====================================================
-void CommentDB::load_comments(const char *path)
+void SymDB::load_syms(const char *path)
 {
     // start with empty comments list
-    free_comments();
+    free_syms();
 
     FILE *f = fopen(path, "rt");
     if (!f) {
@@ -177,7 +180,7 @@ void CommentDB::load_comments(const char *path)
         if (str) {
             *str++ = 0;
             addr_t addr = HexVal(p);
-            set_comment(addr, str);
+            set_sym(addr, str);
         }
 
         // get next line of comments file
@@ -189,7 +192,7 @@ void CommentDB::load_comments(const char *path)
 
 
 // =====================================================
-void CommentDB::save_comments(const char *path)
+void SymDB::save_syms(const char *path)
 {
     if (head) {
         // create the .cmt file
@@ -213,11 +216,11 @@ void CommentDB::save_comments(const char *path)
 
 // =====================================================
 // free up the entire list of comments
-void CommentDB::free_comments()
+void SymDB::free_syms()
 {
     for (comment *p = head; p; ) {
         comment *q = p->next;
-        free_comment(p);
+        free_sym(p);
         p = q;
     }
 
@@ -226,7 +229,7 @@ void CommentDB::free_comments()
 
 
 // =====================================================
-CommentDB::comment *CommentDB::new_comment(addr_t addr, const char *s)
+SymDB::comment *SymDB::new_sym(addr_t addr, const char *s)
 {
     comment *p = (comment *) malloc(sizeof *p);
 
@@ -242,7 +245,7 @@ CommentDB::comment *CommentDB::new_comment(addr_t addr, const char *s)
 
 
 // =====================================================
-void CommentDB::free_comment(CommentDB::comment *p)
+void SymDB::free_sym(SymDB::comment *p)
 {
     if (p->text) {
         free((void *) p->text);
@@ -252,9 +255,9 @@ void CommentDB::free_comment(CommentDB::comment *p)
 
 
 // =====================================================
-void CommentDB::dump_comments()
+void SymDB::dump_syms()
 {
-    printf("dump_comments()\n");
+    printf("dump_syms()\n");
 
     if (!head) {
         printf("  head = NULL\n");

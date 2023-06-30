@@ -412,7 +412,7 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
 // comments
 
     if (!(flags & BL_NOCOMMENT)) {
-        const char *comment = cmt.get_comment(addr);
+        const char *comment = cmt.get_sym(addr);
         if (comment && comment[0]) {
             *p++ = ';';
             *p = 0;

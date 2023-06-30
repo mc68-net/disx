@@ -237,7 +237,7 @@ int DisSave::save_file()
     // write comments
     strcpy(path, rom._fname);
     strcat(path, ".cmt");
-    cmt.save_comments(path);
+    cmt.save_syms(path);
 
     return 0;
 }
@@ -652,7 +652,7 @@ ERROR:
     // read comments
     strcpy(path, rom._fname);
     strcat(path, ".cmt");
-    cmt.load_comments(path);
+    cmt.load_syms(path);
     
     rom.save_undo();
     rom._changed = false;

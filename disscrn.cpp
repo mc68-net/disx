@@ -1214,7 +1214,7 @@ bool DisScrn::load_comment()
         _cmd[0] = 0;
 
         // attempt to get comment for the address
-        const char *s = cmt.get_comment(_sel.addr);
+        const char *s = cmt.get_sym(_sel.addr);
         if (s) {
             strcpy(_cmd, s);
         }
@@ -1236,9 +1236,9 @@ void DisScrn::do_comment()
     // comment address is in _sel.addr
 
     // see if comment has changed
-    const char *old = cmt.get_comment(_sel.addr);
+    const char *old = cmt.get_sym(_sel.addr);
     if (!old || strcmp(old, _cmd)) {
-        cmt.set_comment(_sel.addr, _cmd);
+        cmt.set_sym(_sel.addr, _cmd);
         rom._changed = true;
         print_screen();
     }

@@ -375,11 +375,19 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
 // -----------------------------------------------------
 // label
 
+    const char *str;
+    // if first line, check for override symbol label
+    if (ofs == 0 && (str = sym.get_sym(addr))) {
+        strcat(p, str);
+        strcat(p, ":");
+        p = add_tab(s, T_LABEL, false);
+    } else
+
     if (line_cols & (1 << T_LABEL)) {
         // add label of current address
         if (rom.get_attr(addr + ofs) & ATTR_LMASK) {
             generic.make_label(addr + ofs, label);
-            strcat(label,":");
+            strcat(label, ":");
         }
 
         if (!(flags & BL_NOLABEL)) {

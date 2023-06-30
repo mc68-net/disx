@@ -308,6 +308,7 @@ int DisStore::load_bin(const char *fname, addr_t ofs, addr_t size, addr_t base)
     // remove any previous image data
     unload();
     cmt.free_syms();
+    sym.free_syms();
 
     // open the file
     FILE *f = fopen(fname, "rb");

@@ -57,25 +57,11 @@ SymDB::comment *SymDB::find_sym(addr_t addr)
 // =====================================================
 const char *SymDB::get_sym(addr_t addr)
 {
-//printf("get_sym(%.8X) = ", (int) addr);
-#if 1
     comment *p = find_sym(addr);
 
     if (p && addr == p->addr) {
-//printf("'%s'\n", p->text);
         return p->text;
     }
-#else
-    for (comment *p = head; p; p = p->next) {
-        if (addr == p->addr) {
-            return p->text;
-        }
-        if (addr > p->addr) {
-            break;
-        }
-    }
-#endif
-//printf("NULL\n");
     return NULL;
 }
 
@@ -83,13 +69,6 @@ const char *SymDB::get_sym(addr_t addr)
 // =====================================================
 void SymDB::set_sym(addr_t addr, const char *s)
 {
-(void) addr;
-(void) s;
-
-//printf("set_sym(%.8X, ", (int) addr);
-//if (s) printf("'%s')\n", s);
-//  else printf("NULL)\n");
-
     // first try to find the comment
     comment *p = find_sym(addr);
 
@@ -138,7 +117,7 @@ void SymDB::set_sym(addr_t addr, const char *s)
                     cache_prev = prev;
                 } else {
                     // should not get here!
-                    printf("  huh?\n"); fflush(stdout);
+                    printf("  huh?  \n"); fflush(stdout);
                 }
             }
             // dispose of the old comment

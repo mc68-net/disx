@@ -95,12 +95,14 @@ struct cmd_line_t line_cmds[] =
     { "q",      &DisScrn::do_cmd_quit   }, // "q"      - exit program
     { "lst",    &DisScrn::do_cmd_list   }, // "lst"    - save disassembly listing
     { "list",   &DisScrn::do_cmd_list   }, // "list"   - save disassembly listing
+    { "l",      &DisScrn::do_cmd_label  }, // "l"      - set/clear a label
+    { "label",  &DisScrn::do_cmd_label  }, // "label"  - set/clear a label
     { "asm" ,   &DisScrn::do_cmd_asm    }, // "asm"    - save asm source listing
     { "save",   &DisScrn::do_cmd_save   }, // "save"   - save disassembly state
     { "wq",     &DisScrn::do_cmd_wq     }, // "wq"     - save state and quit
     { "w",      &DisScrn::do_cmd_save   }, // "w"      - save disassembly state
     { "load",   &DisScrn::do_cmd_load   }, // "load"   - load binary and disassembly state
-    { "l",      &DisScrn::do_cmd_load   }, // "l"      - load binary and disassembly state
+//  { "l",      &DisScrn::do_cmd_load   }, // "l"      - load binary and disassembly state
 //  { "new",    &DisScrn::do_cmd_new    }, // "new"    - unload current file
     { "rst",    &DisScrn::do_cmd_rst    }, // "rst"    - set lengths after Z80 RST instrs
 //  { "go",     &DisScrn::do_cmd_go     }, // "go"     - go to address
@@ -1060,6 +1062,37 @@ void DisScrn::do_cmd_tab(char *p)
             disline.tabs[0], disline.tabs[1],
             disline.tabs[2], disline.tabs[3], disline.tabs[4]);
     error(s);
+}
+
+
+// =====================================================
+void DisScrn::do_cmd_label(char *p)
+{
+    char word[256];
+    char str[256];
+    int token = GetString(p, word);
+    addr_t addr = _sel.addr;
+    str[0] = 0;
+
+    if (token) {
+        //***TODO: check here for hexadecimal word, if found, change addr
+
+        // convert label to uppercase
+        for (char *p = word; *p; p++) {
+            *p = toupper(*p);
+        }
+        strcpy(str, word);
+    } else {
+        // if no parameter, delete label at current address
+    }
+
+    // see if label name has changed
+    const char *old = sym.get_sym(addr);
+    if (!old || strcmp(old, str)) {
+        sym.set_sym(addr, str);
+        rom._changed = true;
+        print_screen();
+    }
 }
 
 

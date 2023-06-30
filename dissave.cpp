@@ -239,6 +239,11 @@ int DisSave::save_file()
     strcat(path, ".cmt");
     cmt.save_syms(path);
 
+    // write symbols
+    strcpy(path, rom._fname);
+    strcat(path, ".sym");
+    sym.save_syms(path);
+
     return 0;
 }
 
@@ -653,6 +658,11 @@ ERROR:
     strcpy(path, rom._fname);
     strcat(path, ".cmt");
     cmt.load_syms(path);
+
+    // read symbols
+    strcpy(path, rom._fname);
+    strcat(path, ".sym");
+    sym.load_syms(path);
     
     rom.save_undo();
     rom._changed = false;

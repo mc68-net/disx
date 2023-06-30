@@ -220,12 +220,12 @@ asm             Create the file "binfile.asm" as a source-style file of the whol
 
 save / w        Save the current disassembly state into "binfile.ctl".
 
-load / l <file> [!] [Bxxxx] [Sxxxx] [Oxxxx]
+load <file> [!] [Bxxxx] [Sxxxx] [Oxxxx]
                 Load the binary file.
                 - If "file.ctl" exists, it will be used.
                 - If the file name is a single "-" character, the current file
                   will be reloaded.
-                - If ! is used, the disassembly state in "file.ctl" is
+                - If ! is used, the disassembly state in an existing "file.ctl" is
                   completely ignored.
                 - The B/S/O parameters will override what is stored in the .ctl
                   file, but will not be saved into the .ctl file until an actual
@@ -234,6 +234,10 @@ load / l <file> [!] [Bxxxx] [Sxxxx] [Oxxxx]
                   saved disassembly information to be incorrect.
                   Warning: if the parameters result in a smaller data area,
                   some disassembly state could be lost!
+
+label / l [name] If name is specified, a custom label is added for the current
+                code address. If no name is specified, any custom label for the
+                current address is removed.
 
 tabs [!] [n] [n] [n] [n] [n]
                 Without any parameters, shows the current column widths.
@@ -302,6 +306,22 @@ Some diassemblers can use a few extra hints on what to do. There are two flag bi
 0,2 = combine LXI, 1,3 = don't combine LXI
 
 
+=== LABELS ===
+
+Addresses can be overriden with custom labels. This lets you name things, or use labels from existing source code, and it lets you add address references for an external ROM.
+
+To add a label, use the ":L" or ":LABEL" command. If you specify a name, a label is added at the current address, otherwise a label is deleted at the current address. Labels are saved in a text file called "file.sym", which can be edited when not running the disassembler.
+
+NOTE: THIS FEATURE IS CURRENTLY EXPERIMENTAL AND UNDER DEVELOPMENT
+(but it works rather well for just a few hours of effort!)
+
+- there is no way yet to add labels outside the file range from in the disassembler; you must edit the .sym file manually
+- when using the :ASM or :LIST commands, labels outside the binary file do not get labels generated
+- there is no check for duplicate labels
+- labels are only generated in contexts where code addresses are used, and currently this excludes zero-page addresses
+- labels can not be attached to "EQU $-1" lines
+
+
 === MISCELLANEOUS STUFF ===
 
 * If the .bin file has been moved to a different directory, the path saved in the .ctl file will not match. There will still be an attempt to load the .ctl file from the same directory as the .bin file.
@@ -310,7 +330,7 @@ Some diassemblers can use a few extra hints on what to do. There are two flag bi
 
 * Not all of the disassembler cores have been thoroughly tested. Some (ARM and PIC) were never quite finished.
 
-* The PIC disassembler creates labels using the byte address rather than the word address.
+* The PIC disassembler creates label names using the byte address rather than the word address.
 
 * The PIC disassembler requires the binary be in little-endian format (low instruction byte first).
 

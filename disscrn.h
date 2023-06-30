@@ -98,6 +98,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_cpu (char *p);  // handle "cpu"  command
     void do_cmd_defcpu(char *p);// handle "defcpu" command
     void do_cmd_tab (char *p);  // handle "tab"  command
+    void do_cmd_label(char *p);	// hanble "label" command
 
     void do_cmd_a();            // handle 'a' command
     void do_cmd_b();            // handle 'b' command

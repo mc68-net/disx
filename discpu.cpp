@@ -1,6 +1,7 @@
 // discpu.cpp
 
 #include "discpu.h"
+#include "discmt.h"
 
 // =====================================================
 // class CPU
@@ -434,6 +435,14 @@ void CPU::make_label(addr_t addr, char *s) const
     s[0] = 0;
     char c = 0;
 
+    // check if external symbol defined at this address
+    const char *str;
+    if ((str = sym.get_sym(addr))) {
+        strcpy(s, str);
+        return;
+    }
+
+    // get label type for this address
     switch(rom.get_attr(addr) & ATTR_LMASK) {
         default: // no label
         case ATTR_LNONE:
@@ -452,6 +461,7 @@ void CPU::make_label(addr_t addr, char *s) const
             break;
     }
 
+    // concatenate address to label type
     switch (defCpu->_addrwid) {
         default:
         case ADDR_16:

@@ -63,8 +63,8 @@ static const struct InstrRec F8_opcdTable[] =
 /*09*/      {"LR",   "PC1,K"   , 0                },
 /*0A*/      {"LR",   "A,IS"    , 0                },
 /*0B*/      {"LR",   "IS,A"    , 0                },
-/*0C*/      {"PK",   ""        , 0                },
-/*0D*/      {"LR",   "PC0,Q"   , LFFLAG | REFFLAG },
+/*0C*/      {"PK",   ""        , LFFLAG           },
+/*0D*/      {"LR",   "PC0,Q"   , LFFLAG           },
 /*0E*/      {"LR",   "Q,DC0"   , 0                },
 /*0F*/      {"LR",   "DC0,Q"   , 0                },
 
@@ -95,7 +95,7 @@ static const struct InstrRec F8_opcdTable[] =
 /*27*/      {"OUT",  "b"       , 0                },
 /*28*/      {"PI",   "w"       , REFFLAG | CODEREF},
 /*29*/      {"JMP",  "w"       , LFFLAG | REFFLAG | CODEREF},
-/*2A*/      {"DCI",  "w"       , 0                },
+/*2A*/      {"DCI",  "w"       , REFFLAG          },
 /*2B*/      {"NOP",  ""        , 0                },
 /*2C*/      {"XDC",  ""        , 0                },
 /*2D*/      {"",     ""        , 0                },
@@ -188,14 +188,14 @@ static const struct InstrRec F8_opcdTable[] =
 /*7E*/      {"LIS",  "14"      , 0                },
 /*7F*/      {"LIS",  "15"      , 0                },
 
-/*80*/      {"BT",   "0,r"     , REFFLAG | CODEREF},
-/*81*/      {"BP",   "r"       , REFFLAG | CODEREF},
-/*82*/      {"BC",   "r"       , REFFLAG | CODEREF},
-/*83*/      {"BT",   "3,r"     , REFFLAG | CODEREF},
-/*84*/      {"BZ",   "r"       , REFFLAG | CODEREF},
-/*85*/      {"BT",   "5,r"     , REFFLAG | CODEREF},
-/*86*/      {"BT",   "6,r"     , REFFLAG | CODEREF},
-/*87*/      {"BT",   "7,r"     , REFFLAG | CODEREF},
+/*80*/      {"BT",   "0,r"     , 0                }, // BT 0 =    do not branch (NOP)
+/*81*/      {"BP",   "r"       , REFFLAG | CODEREF}, // BT 1 = BP positive
+/*82*/      {"BC",   "r"       , REFFLAG | CODEREF}, // BT 2 = BC carry
+/*83*/      {"BT",   "3,r"     , REFFLAG | CODEREF}, // BT 3 =    positive or carry
+/*84*/      {"BZ",   "r"       , REFFLAG | CODEREF}, // BT 4 = BZ zero
+/*85*/      {"BT",   "5,r"     , REFFLAG | CODEREF}, // BT 5 = =1 positive
+/*86*/      {"BT",   "6,r"     , REFFLAG | CODEREF}, // BT 6 =    zero or carry
+/*87*/      {"BT",   "7,r"     , REFFLAG | CODEREF}, // BT 7 = =3 positive or carry
 /*88*/      {"AM",   ""        , 0                },
 /*89*/      {"AMD",  ""        , 0                },
 /*8A*/      {"NM",   ""        , 0                },
@@ -203,24 +203,24 @@ static const struct InstrRec F8_opcdTable[] =
 /*8C*/      {"XM",   ""        , 0                },
 /*8D*/      {"CM",   ""        , 0                },
 /*8E*/      {"ADC",  ""        , 0                },
-/*8F*/      {"BR7",  "r"       , REFFLAG | CODEREF},
+/*8F*/      {"BR7",  "r"       , REFFLAG | CODEREF}, // if low 3 bits of ISAR not 111
 
-/*90*/      {"BR",   "r"       , LFFLAG | REFFLAG | CODEREF},
-/*91*/      {"BM",   "r"       , REFFLAG | CODEREF},
-/*92*/      {"BNC",  "r"       , REFFLAG | CODEREF},
-/*93*/      {"BF",   "3,r"     , REFFLAG | CODEREF},
-/*94*/      {"BNZ",  "r"       , REFFLAG | CODEREF},
-/*95*/      {"BF",   "5,r"     , REFFLAG | CODEREF},
-/*96*/      {"BF",   "6,r"     , REFFLAG | CODEREF},
-/*97*/      {"BF",   "7,r"     , REFFLAG | CODEREF},
-/*98*/      {"BNO",  "r"       , REFFLAG | CODEREF},
-/*99*/      {"BF",   "9,r"     , REFFLAG | CODEREF},
-/*9A*/      {"BF",   "10,r"    , REFFLAG | CODEREF},
-/*9B*/      {"BF",   "11,r"    , REFFLAG | CODEREF},
-/*9C*/      {"BF",   "12,r"    , REFFLAG | CODEREF},
-/*9D*/      {"BF",   "13,r"    , REFFLAG | CODEREF},
-/*9E*/      {"BF",   "14,r"    , REFFLAG | CODEREF},
-/*9F*/      {"BF",   "15,r"    , REFFLAG | CODEREF},
+/*90*/      {"BR",   "r"       , LFFLAG | REFFLAG | CODEREF}, // BF 0 = BR always branch
+/*91*/      {"BM",   "r"       , REFFLAG | CODEREF}, // BF  1 = BM  negative
+/*92*/      {"BNC",  "r"       , REFFLAG | CODEREF}, // BF  2 = BNC no carry
+/*93*/      {"BF",   "3,r"     , REFFLAG | CODEREF}, // BF  3 =     no carry and negative
+/*94*/      {"BNZ",  "r"       , REFFLAG | CODEREF}, // BF  4 = BNZ not zero
+/*95*/      {"BF",   "5,r"     , REFFLAG | CODEREF}, // BF  5 = =1  negative
+/*96*/      {"BF",   "6,r"     , REFFLAG | CODEREF}, // BF  6 =     no carry and not zero
+/*97*/      {"BF",   "7,r"     , REFFLAG | CODEREF}, // BF  7 = =3  no carry and negative
+/*98*/      {"BNO",  "r"       , REFFLAG | CODEREF}, // BF  8 = BNO no overflow
+/*99*/      {"BF",   "9,r"     , REFFLAG | CODEREF}, // BF  9 =     neg and no ovf
+/*9A*/      {"BF",   "10,r"    , REFFLAG | CODEREF}, // BF 10 =     no ovf and no carry
+/*9B*/      {"BF",   "11,r"    , REFFLAG | CODEREF}, // BF 11 =     no ovf, no cy, neg
+/*9C*/      {"BF",   "12,r"    , REFFLAG | CODEREF}, // BF 12 =     no ovf and not zero
+/*9D*/      {"BF",   "13,r"    , REFFLAG | CODEREF}, // BF 13 = =9  neg and no ovf
+/*9E*/      {"BF",   "14,r"    , REFFLAG | CODEREF}, // BF 14 =     no ovf, no cy, no zr
+/*9F*/      {"BF",   "15,r"    , REFFLAG | CODEREF}, // BF 15 = =8  no overflow
 
 /*A0*/      {"INS",  "0"       , 0                },
 /*A1*/      {"INS",  "1"       , 0                },

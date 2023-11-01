@@ -104,6 +104,8 @@ void SymDB::set_sym(addr_t addr, const char *s)
             if (p == head) {
                 // remove from head of list
                 head = p->next;
+                // invalidate the cached position!
+                cache = 0;
             } else {
                 // find previous comment
                 comment *prev = NULL;

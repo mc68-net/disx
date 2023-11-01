@@ -758,8 +758,8 @@ int Dis78K3::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
                 // == mem modes ==
                 case 'm':
+                    const char *q;
                     switch (*(l+1)) {
-                        const char *q;
 
                         default: // general 'mem' case
                             // mode = B1 bits 4..0, 16 17 06 0A only

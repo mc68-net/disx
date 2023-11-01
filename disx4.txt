@@ -448,7 +448,7 @@ Bugs fixed:
 - It is now possible to change tab stops.
 - [ and ] commands will now skip past a pre-LF line.
 
-4.2.0 - 
+4.2.0 - 2023-10-31
 
 New features:
 - added 68HC05 disassembler
@@ -463,5 +463,6 @@ Bugs fixed:
 - 68HC11: fixed AIM/OIM/EIM/TIM instructions for 6303
 - 6502: fixed some branch-always combinations
 - F8: updated instruction definitions
+- fixed a caching bug when deleting a label or comment
 
 ================

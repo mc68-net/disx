@@ -26,7 +26,7 @@ enum {
     // CPU types and type bits for instructions
     CPU_6800   = 1, // 6800, 6802, 6808
     CPU_6801   = 2, // 6801/68701, 6803
-    CPU_6303   = 4, // Hitachi 6303, 63701
+    CPU_6303   = 4, // Hitachi 6301, 6303, 63701
     CPU_68HC11 = 8, // 68HC11, etc.
     _PAGE      = 16, // page byte for 68HC11
 
@@ -45,6 +45,7 @@ Dis68HC11 cpu_6801  ("6801",   CPU_6801,   BIG_END, ADDR_16, '*', '$', "FCB", "F
 Dis68HC11 cpu_6802  ("6802",   CPU_6800,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_6803  ("6803",   CPU_6801,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_6808  ("6808",   CPU_6800,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
+Dis68HC11 cpu_6303  ("6301",   CPU_6303,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_6303  ("6303",   CPU_6303,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_68HC11("68HC11", CPU_68HC11, BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 

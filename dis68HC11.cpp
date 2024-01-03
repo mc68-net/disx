@@ -45,7 +45,7 @@ Dis68HC11 cpu_6801  ("6801",   CPU_6801,   BIG_END, ADDR_16, '*', '$', "FCB", "F
 Dis68HC11 cpu_6802  ("6802",   CPU_6800,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_6803  ("6803",   CPU_6801,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_6808  ("6808",   CPU_6800,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
-Dis68HC11 cpu_6303  ("6301",   CPU_6303,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
+Dis68HC11 cpu_6301  ("6301",   CPU_6303,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_6303  ("6303",   CPU_6303,   BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 Dis68HC11 cpu_68HC11("68HC11", CPU_68HC11, BIG_END, ADDR_16, '*', '$', "FCB", "FDB", "DL");
 

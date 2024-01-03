@@ -257,16 +257,16 @@ void DisScrn::debug_info()
     int col = 80;       // column for debug info
 
     wmove(_win, row++, col);
-    wprintw(_win, " _start = %.4X:%d ", _start.addr, _start.line);
+    wprintw(_win, " _start = %.4X:%d ", (int) _start.addr, (int) _start.line);
 
     wmove(_win, row++, col);
-    wprintw(_win, " _top   = %.4X:%d ", _top.addr, _top.line);
+    wprintw(_win, " _top   = %.4X:%d ", (int) _top.addr, (int) _top.line);
 
     wmove(_win, row++, col);
-    wprintw(_win, " _sel   = %.4X:%d ", _sel.addr, _sel.line);
+    wprintw(_win, " _sel   = %.4X:%d ", (int) _sel.addr, (int) _sel.line);
 
     wmove(_win, row++, col);
-    wprintw(_win, " _end   = %.4X:%d ", _end.addr, _end.line);
+    wprintw(_win, " _end   = %.4X:%d ", (int) _end.addr, (int) _end.line);
 
     wmove(_win, row++, col);
     wprintw(_win, " _sel_row  = %3d ", _sel_row);

@@ -485,7 +485,7 @@ int DisARM::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
     opcd = ARM_FetchLong(addr, len);
     instr = ARM_FindInstr(opcd);
 
-    if (instr && instr->typ && *(instr->op)) {
+    if (!(addr & 3) && instr && instr->typ && *(instr->op)) {
         invalid  = false;
         addcond  = true;
         len     = 4;

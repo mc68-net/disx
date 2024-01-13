@@ -365,7 +365,7 @@ This is a rough estimation of the quality of each disassembler:
 2  dis78K3.cpp   - only tested on one code example
 2  dis8086.cpp   - very minimal, only useful for Small model code without segments
 2  dispdp11.cpp  - sort of works, but not enough examples
-
+2  disthumb.c    - needs work, and can't deal with odd code addresses (Thumb flag)
 
 === Q AND A ===
 
@@ -464,5 +464,11 @@ Bugs fixed:
 - 6502: fixed some branch-always combinations
 - F8: updated instruction definitions
 - fixed a caching bug when deleting a label or comment
+
+4.3.0 - 2024-??-??
+
+New features:
+- added 6301 to 68HC11 disassembler
+- started ARM Thumb diassembler
 
 ================

@@ -53,5 +53,7 @@ typedef long addr_t;
 #endif
 //#define NDEBUG
 
+// Macro to determine the number of elements in an array
+#define ARRAY_SIZE(a) (sizeof a / sizeof a[0])
 
 #endif // _DISX_H_

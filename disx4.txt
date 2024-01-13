@@ -356,6 +356,7 @@ This is a rough estimation of the quality of each disassembler:
 3  dis8048.cpp   - tested with re-assemblies, but suffers from guessing bank selects
 3  disz8.cpp     - tested on a few re-assemblies
 3  dis8008.cpp   - tested on a few re-assemblies
+2  dis4004.cpp   - tested on the Busicode calculator ROM
 2  dis1802.cpp   - sort of works, but few samples and it suffers from split references
 2  disf8.cpp     - sort of works, but not enough examples
 2  dispic.cpp    - sort of works, but better testing needed
@@ -469,6 +470,7 @@ Bugs fixed:
 
 New features:
 - added 6301 to 68HC11 disassembler
-- started ARM Thumb diassembler
+- added ARM Thumb diassembler
+- added 4004 disassembler
 
 ================

@@ -101,6 +101,7 @@ enum {
     o_B8,           // Dxxx b<cc>.n with 8-bit offset
     o_B11,          // Exxx b.n with 11-bit offset
     o_BL23,         // Fxxx bl 23-bit relative
+    o_Op8,          //      8-bit immediate operand
 
     o_MRS,
     o_MSR,
@@ -176,10 +177,10 @@ static const struct InstrRec Thumb_opcdTable[] =
 
     //  8 -- 0  1  0  1  H  S  1  ro ro ro rb rb rb rd rd rd -- load/store sign-extended byte/halfword
     // 5xxx (not tested)
-    { 0xFE00, 0x5000, o_LDR_STR_ofs, "strh", 0 },
-    { 0xFE00, 0x5400, o_LDR_STR_ofs, "ldrh", 0 },
-    { 0xFE00, 0x5800, o_LDR_STR_ofs, "ldsb", 0 },
-    { 0xFE00, 0x5C00, o_LDR_STR_ofs, "ldsh", 0 },
+    { 0xFE00, 0x5200, o_LDR_STR_ofs, "strh", 0 },
+    { 0xFE00, 0x5600, o_LDR_STR_ofs, "ldrh", 0 },
+    { 0xFE00, 0x5A00, o_LDR_STR_ofs, "ldsb", 0 },
+    { 0xFE00, 0x5E00, o_LDR_STR_ofs, "ldsh", 0 },
 
     //  9 -- 0  1  1  B  L  o  o  o  o  o  rb rb rb rd rd rd -- load/store with immediate offset
     // 6xxx/7xxx 
@@ -223,7 +224,8 @@ static const struct InstrRec Thumb_opcdTable[] =
 //  { 0xFFC0, 0xBA80, }, // not defined?
 //  { 0xFFC0, 0xBAC0, }, // REVSH byte-reverse signed halfword
     { 0xFE00, 0xBC00, o_PUSH_POP, "pop" ,  0 },
-//  { 0xFFFF, 0xBE  , }, // breakpoint
+    { 0xFF00, 0xBE00, o_Op8,      "bkpt",  0 }, // breakpoint
+    { 0xFFFF, 0xBF00, o_Implied,  "nop",   0 },
     { 0xFFFF, 0xBF30, o_Implied,  "wfi",   0 },
 //  { 0xFFFF, 0xBF  , }, // hints
 
@@ -247,10 +249,9 @@ static const struct InstrRec Thumb_opcdTable[] =
     { 0xFF00, 0xDC00, o_B8,       "bgt.n", REFFLAG | CODEREF },
     { 0xFF00, 0xDD00, o_B8,       "ble.n", REFFLAG | CODEREF },
 //  { 0xFF00, 0xDE00, o_Invalid,  "",      0 }, // undefined
-    { 0xFF00, 0xDF00, o_Imm8,     "swi",   0 }, // SWI instruction (untested) FIXME
 
     // 17 -- 1  1  0  1  1  1  1  1  n  n  n  n  n  n  n  n -- software interrupt
-//  { 0xFF00, 0xDF00, o_          , "", 0 },
+//  { 0xFF00, 0xDF00, o_Op8,      "swi",   0 },
 
     // 18 -- 1  1  1  0  0  o  o  o  o  o  o  o  o  o  o  o -- unconditional branch
     { 0xF800, 0xE000, o_B11,      "b.n",   LFFLAG | REFFLAG | CODEREF },
@@ -580,6 +581,9 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
                 break;
             }
 
+            case o_Op8:
+                i = opcd & 0x00FF;
+                sprintf(parms, "#0x%.2x", opcd & 0xFF);
                 break;
 
             default:

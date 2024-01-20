@@ -26,6 +26,7 @@ public:
            const char *wordOp, const char *longOp);
 
     virtual int dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr);
+    virtual bool has_odd_code() { return true; } // enable "odd code" mode for Thumb
 
 private:
     int FetchWord(int addr, int &len);

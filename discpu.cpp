@@ -393,6 +393,14 @@ char *CPU::RefStr6(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 // =====================================================
 char *CPU::RefStr8(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
+    // check for an odd_code situation (odd addresses of Thumb code)
+    // This is only done in RefStr8 simply because that's
+    // the only place where it is needed.
+    bool odd = is_odd_code(addr);
+    if (odd) {
+        addr--;
+    }
+
     s[0] = 0;
 
     if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
@@ -406,6 +414,11 @@ char *CPU::RefStr8(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 
     if (!s[0]) {
         H8Str(addr, s);
+    }
+
+    // append a trailing "+1" for the odd_code situation
+    if (odd) {
+        strcat(s, "+1");
     }
 
     return s;
@@ -1142,3 +1155,33 @@ int DisDefault::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, add
 }
 
 
+// =====================================================
+// Determine if the address is an "odd_code" address.
+// This is used for Thumb, where an odd address can refer
+// to code at the even address, and the low bit is a flag
+// indicating that it is Thumb code.
+bool CPU::is_odd_code(addr_t addr)
+{
+    // if addr is even, return false
+    if (!(addr & 1)) {
+        return false;
+    }
+
+    // get instr type of addr
+    int type = rom.get_type(addr);
+    // if < mCode, return false
+    if (type < mCode) {
+        return false;
+    }
+
+    // addr or addr-1 must be a code label address
+    if (!( ((rom.get_attr(addr-1) & ATTR_LMASK) == ATTR_LCODE) ||
+           ((rom.get_attr(addr  ) & ATTR_LMASK) == ATTR_LCODE) )) {
+        return false;
+    }
+
+    // look up the CPU from the type
+    CPU *cpu = get_cpu(type);
+    // ask the cpu if it supports oddcode
+    return (cpu && cpu->has_odd_code());
+}

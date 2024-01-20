@@ -107,6 +107,12 @@ protected:
 
     friend class DisSave; // for save_file() / load_file()
     friend class DisLine; // for dis_org()
+
+    // returns true if this CPU can have 16-bit code addresses be odd (Thumb)
+    virtual bool has_odd_code() { return false; }
+
+    // returns true if the address is an odd_code address
+    static bool is_odd_code(addr_t addr);
 };
 
 extern CPU *curCpu;             // pointer to current CPU

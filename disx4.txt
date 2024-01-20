@@ -336,6 +336,8 @@ NOTE: THIS FEATURE IS CURRENTLY EXPERIMENTAL AND UNDER DEVELOPMENT
 
 * The 78K0 disassembler is mostly working, but the code that I had hoped used it was actually for a different CPU, so it hasn't really been tested.
 
+* Because Thumb often uses the low bit of an address to indicate Thumb code, longword references to Thumb code will be displayed as the even address "+1". You can not use the "^" command to put a label at the even address, but will have to manually add a label at the even address.
+
 
 === DISASSEMBLER STATUS ===
 

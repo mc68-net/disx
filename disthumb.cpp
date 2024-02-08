@@ -202,8 +202,8 @@ static const struct InstrRec Thumb_opcdTable[] =
 
     // 12 -- 1  0  1  0  SP r  r  r  n  n  n  n  n  n  n  n -- load address
     // Axxx 
-    { 0xF800, 0xA000, o_LoadAddr, "add",   REFFLAG }, // pc
-    { 0xF800, 0xA800, o_LoadAddr, "add",   0 }, // sp
+    { 0xF800, 0xA000, o_LoadAddr, "ldr",   REFFLAG }, // pc  (add Rd, pc, #imm)
+    { 0xF800, 0xA800, o_LoadAddr, "add",   0 },       // sp  {add Rd, sp, #imm)
 
     // 13 -- 1  0  1  1  0  0  0  0  S  n  n  n  n  n  n  n -- add offset to stack pointer
     { 0xFF80, 0xB000, o_ImmS7,    "add",   0 },
@@ -400,8 +400,8 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
 
             case o_LDR_PC:
                 ra = (addr & 0xFFFFFFFC) + 4 + (opcd & 0xFF) * 4;
-//              sprintf(parms, "r%d, [pc, #%d]", (opcd >> 3) & 7, i);
-                sprintf(parms, "r%d, ", (opcd >> 3) & 7);
+//              sprintf(parms, "r%d, [pc, #%d]", (opcd >> 8) & 7, i);
+                sprintf(parms, "r%d, ", (opcd >> 8) & 7);
                 RefStr(ra, parms + strlen(parms), lfref, refaddr);
                 break;
 
@@ -429,7 +429,7 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
                 break;
 
             case o_STR_LDR_SP:
-                sprintf(parms, "r%d, [sp, #%d]", (opcd >> 8) & 7, (opcd & 0x0780) * 4);
+                sprintf(parms, "r%d, [sp, #%d]", (opcd >> 8) & 7, (opcd & 0x00FF) * 4);
                 break;
 
             case o_LoadAddr:

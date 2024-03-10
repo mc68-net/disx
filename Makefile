@@ -26,13 +26,17 @@ run: all
 #   comment it out if you aren't running OS X with a multi-architecture compiler
 #TARGET_ARCH = -arch ppc -arch i686
 
+# C preprocessor flags for both C and C++
+CPPFLAGS  = -g3 -O2 -Wall -Werror -Wextra -Wno-sign-compare
+CPPFLAGS += -DVERSION=\"$(VERSION)${REV}\" -DDATE=\"$(DATE)\"
+CPPFLAGS += $(shell pkg-config --cflags ncurses)
 # C compiler flags
-CPPFLAGS = -g
-CFLAGS = -Wall -Werror -Wextra -std=c99 -O2 -DVERSION=\"$(VERSION)${REV}\" -DDATE=\"$(DATE)\"
-CXXFLAGS = -Wall -Werror -Wextra -Wno-sign-compare -fno-rtti -fno-exceptions -O2 -DVERSION=\"$(VERSION)${REV}\" -DDATE=\"$(DATE)\"
+CFLAGS    = -std=c99
+# C++ compiler flags
+CXXFLAGS  = -fno-rtti -fno-exceptions
 
 # libraries
-LDLIBS = -lncurses
+LDLIBS  = $(shell pkg-config --libs ncurses)
 LDFLAGS = -lstdc++
 
 

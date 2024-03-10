@@ -475,4 +475,7 @@ New features:
 - added ARM Thumb diassembler
 - added 4004 disassembler
 
+Bugs fixed:
+- ORG was only being generated with a 16-bit address
+
 ================

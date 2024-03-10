@@ -93,6 +93,7 @@ protected:
     char *H4Str(uint16_t w, char *s) const;
     char *H6Str(uint32_t l, char *s) const;
     char *H8Str(uint32_t l, char *s) const;
+    char *HxStr(uint32_t l, char *s) const;
 
     // print reference to a label (if label exists) or just hex
     char *RefStr2(addr_t addr, char *s, int &lfref, addr_t &refaddr) const;

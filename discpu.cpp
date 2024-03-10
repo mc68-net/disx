@@ -325,6 +325,19 @@ char *CPU::H8Str(uint32_t l, char *s) const
 
 
 // =====================================================
+char *CPU::HxStr(uint32_t l, char *s) const
+{
+    if (l > 0x00FFFFFF) {
+        return H8Str(l, s);
+    } else if (rom._base > 0x0000FFFF) {
+        return H6Str(l, s);
+    } else {
+        return H4Str(l, s);
+    }
+}
+
+
+// =====================================================
 char *CPU::RefStr2(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
     s[0] = 0;

@@ -446,7 +446,7 @@ void DisLine::dis_org(char *s) const
 {
     // make operand parameter in proper format
     char parms[16];
-    defCpu->H4Str(rom._base, parms);
+    defCpu->HxStr(rom._base, parms);
 
     // build the ORG line
     build_line(rom._base, s, "ORG", parms, /*ofs=*/ 0, /*flags=*/ BL_NOLABEL | BL_NOCOMMENT);

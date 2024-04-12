@@ -26,17 +26,30 @@ run: all
 #   comment it out if you aren't running OS X with a multi-architecture compiler
 #TARGET_ARCH = -arch ppc -arch i686
 
+
+# Attempt to use pkg-config to get info for ncurses
+# Use defaults if it is not found
+ifeq (, $(shell which pkg-config))
+  PKGLIBS   = -lncurses
+  PKGFLAGS  =
+else
+  PKGLIBS  := $(shell pkg-config --libs   ncurses)
+  PKGFLAGS := $(shell pkg-config --cflags ncurses)
+endif
+
+
 # C preprocessor flags for both C and C++
 CPPFLAGS  = -g3 -O2 -Wall -Werror -Wextra -Wno-sign-compare
+CPPFLAGS += -Wno-deprecated-declarations
 CPPFLAGS += -DVERSION=\"$(VERSION)${REV}\" -DDATE=\"$(DATE)\"
-CPPFLAGS += $(shell pkg-config --cflags ncurses)
+CPPFLAGS += $(PKGFLAGS)
 # C compiler flags
 CFLAGS    = -std=c99
 # C++ compiler flags
 CXXFLAGS  = -fno-rtti -fno-exceptions
 
 # libraries
-LDLIBS  = $(shell pkg-config --libs ncurses)
+LDLIBS  = $(PKGLIBS)
 LDFLAGS = -lstdc++
 
 

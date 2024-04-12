@@ -330,8 +330,6 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
     InstrPtr    instr;
     char        s[256];
     bool        invalid;
-    bool        addcond;
-    bool        addflags;
     addr_t      ra;
 
     *opcode  = 0;
@@ -340,8 +338,6 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
     lfref    = 0;
     refaddr  = 0;
     invalid  = true;
-    addcond  = false;
-    addflags = false;
 
 //  ad = addr;
     opcd = FetchWord(addr, len);
@@ -350,7 +346,6 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
 
     if (!(addr & 1) && instr && instr->typ && *(instr->op)) {
         invalid  = false;
-        addcond  = true;
         len     = 2;
         strcpy(opcode, instr->op);
         lfref  = instr->lfref;
@@ -599,7 +594,6 @@ int DisThumb::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
         len     = 0;
         lfref   = 0;
         refaddr = 0;
-        addcond  = false;
     }
 
     return len;

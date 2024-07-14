@@ -478,5 +478,6 @@ New features:
 Bugs fixed:
 - ORG was only being generated with a 16-bit address
 - 68HC11: ASLD was incorrectly being recognized for 6800/6802/6808
+- 68HC11: ABY instruction was not recognized
 
 ================

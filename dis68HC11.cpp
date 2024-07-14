@@ -454,7 +454,7 @@ static const struct InstrRec M68HC11_opcdTable18[] =
 /*1837*/  {""     , iInherent  , 0, 0                 },
 /*1838*/  {"PULY" , iInherent  , _HC11, 0             }, // 68HC11
 /*1839*/  {""     , iInherent  , 0, 0                 },
-/*183A*/  {"ABY"  , iInherent  , 0, 0                 }, // 68HC11
+/*183A*/  {"ABY"  , iInherent  , _HC11, 0             }, // 68HC11
 /*183B*/  {""     , iInherent  , 0, 0                 },
 /*183C*/  {"PSHY" , iInherent  , _HC11, 0             }, // 68HC11
 /*183D*/  {""     , iInherent  , 0, 0                 },

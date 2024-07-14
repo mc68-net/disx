@@ -122,7 +122,7 @@ static const struct InstrRec M6800_opcdTable[] =
 /*02*/  {"IDIV" , iInherent  , _HC11, 0                }, // 68HC11
 /*03*/  {"FDIV" , iInherent  , _HC11, 0                }, // 68HC11
 /*04*/  {"LSRD" , iInherent  , _6801, 0                }, // 68HC11 6303 6801
-/*05*/  {"ASLD" , iInherent  , _6800, 0                }, // 68HC11 6303 6801 (also LSLD)
+/*05*/  {"ASLD" , iInherent  , _6801, 0                }, // 68HC11 6303 6801 (also LSLD)
 /*06*/  {"TAP"  , iInherent  , _6800, 0                },
 /*07*/  {"TPA"  , iInherent  , _6800, 0                },
 /*08*/  {"INX"  , iInherent  , _6800, 0                },

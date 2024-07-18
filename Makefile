@@ -1,7 +1,7 @@
 # makefile for disx4
 
 # version number for zipfile name
-VERSION=4.2.0
+VERSION=4.3.0
 DATE=$(shell date +%Y-%m-%d)
 
 # get svn info

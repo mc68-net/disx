@@ -744,13 +744,26 @@ int Dis8048::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
             case 'a':   // 8048 long jump
                 // determine A11 from SEL MBx hints
-                switch (selmb(addr)) {
-                    case 0: // SEL MB0
-                        ra = 0x0000;      break;
-                    case 1: // SEL MB1
-                        ra = 0x0800;      break;
-                    default: // floating
-                        ra = ad & 0x0800; break;
+                i = rom.get_hint(addr);
+                switch(i) {
+                default:
+                case 0: // hint 0 = use auto-detected bank
+                    switch (selmb(addr)) {
+                        case 0: // SEL MB0
+                            ra = 0x0000;      break;
+                        case 1: // SEL MB1
+                            ra = 0x0800;      break;
+                        default: // floating
+                            ra = ad & 0x0800; break;
+                    }
+                    break;
+                case 1: // hint 1 = use current bank only
+                    ra = ad & 0x0800; break;
+                case 2: // hint 2 = use SEL MB0 bank
+                    ra = 0x0000;      break;
+                case 3: // hint 3 = use SEL MB1 bank
+                    ra = 0x0800;      break;
+                    break;
                 }
                 // get A0-A10 from opcode, keep A12-A15 unchanged
                 ra |= (ad & 0xF000) | ((opcd << 3) & 0x0700);

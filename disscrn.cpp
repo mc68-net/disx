@@ -2513,7 +2513,7 @@ void DisScrn::do_cmd_hint()
     int len = cpu->dis_line(_sel.addr, opcode, parms, lfref, refaddr);
 
     // update length and clean up broken instructions that follow
-    rom.set_instr(_sel.addr, len, rom.get_type(_sel.addr));
+    rom.set_instr(_sel.addr, len, rom.get_type(_sel.addr), !!(lfref & LFFLAG));
 
     // redraw everything
     print_screen();

@@ -492,5 +492,6 @@ New features:
 
 Bugs fixed:
 - reset hint flags when changing instr type
+- Z80: fix Intel 8080 opcode table
 
 ================

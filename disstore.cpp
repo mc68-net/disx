@@ -235,15 +235,19 @@ void DisStore::set_instr(addr_t addr, int len, int type, bool lfflag)
 // set_instr will handle setting all attr/type bytes
 // and smash a following partial instruction back to mData
 {
+    // set default hint flags in first byte if type changed to non-data
+    if (type == mData) {
+        set_hint(addr, 0);
+    } else if (type != get_type(addr)) {
+        set_hint(addr, _defhint);
+    }
+
     // set first byte to type and lfflag
     clear_attr_flag(addr, ATTR_LF1);
     if (lfflag) {
         set_attr_flag(addr, ATTR_LF1);
     }
     set_type(addr++, type);
-
-    // set hint flags in first byte
-    set_hint(addr, _defhint);
 
     // set following bytes (if any) to type/ATTR_CONT
     while (--len) {

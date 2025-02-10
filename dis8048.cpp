@@ -14,6 +14,7 @@ public:
 
 private:
     int selmb(addr_t addr); // peek upward in code to look for SEL MBx instrs
+    int selmb405(addr_t addr); // selmb for NS405
 };
 
 
@@ -22,11 +23,13 @@ enum {
     CPU_8021 = 1, // 8021, reduced from MCS-8048
     CPU_8048 = 2, // 8x48/8x49/8x35, MCS-48
     CPU_8041 = 4, // 8x41/8x42, UPI-41/42, some changed instructions
+    CPU_405  = 8, // National NS405 changed and added instructions
 
     // CPU types for instructions
     _4821 = CPU_8048 | CPU_8021,
     _48   = CPU_8048,
     _41   = CPU_8041,
+    _405  = CPU_405,
 };
 
 Dis8048 cpu_8021("8021", CPU_8021, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
@@ -35,6 +38,7 @@ Dis8048 cpu_8049("8049", CPU_8048, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "D
 Dis8048 cpu_8035("8035", CPU_8048, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
 Dis8048 cpu_8041("8041", CPU_8041, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
 Dis8048 cpu_8042("8042", CPU_8041, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
+Dis8048 cpu_NS405("NS405", CPU_405, LITTLE_END, ADDR_16, '$', 'H', "DB", "DW", "DL");
 
 
 Dis8048::Dis8048(const char *name, int subtype, int endian, int addrwid,
@@ -656,12 +660,306 @@ static const struct InstrRec I8041_opcdTable[] =
 };
 
 
+static const struct InstrRec NS405_opcdTable[] =
+{
+            // op     line         lf    ref
+/*00*/      {"NOP",  ""        , _405 , 0                },
+/*01*/      {"MOV",  "UCR,A"   , _405 , 0                },
+/*02*/      {"OUTL", "BAUD,A"  , _405 , 0                },
+/*03*/      {"ADD",  "A,#b"    , _405 , 0                },
+/*04*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*05*/      {"EN",   "XI"      , _405 , 0                },
+/*06*/      {"JNTF", "j"       , _405 , REFFLAG | CODEREF},
+/*07*/      {"DEC",  "A"       , _405 , 0                },
+
+/*08*/      {"DECL", "R0"      , _405 , 0                },
+/*09*/      {"DECL", "R1"      , _405 , 0                },
+/*0A*/      {"DEC",  "CURS"    , _405 , 0                },
+/*0B*/      {"",     ""        ,   0  , 0                },
+/*0C*/      {"MOV",  "ENDD,A"  , _405 , 0                },
+/*0D*/      {"MOV",  "BECD,A"  , _405 , 0                },
+/*0E*/      {"MOV",  "SROW,A"  , _405 , 0                },
+/*0F*/      {"",     ""        ,   0  , 0                },
+
+/*10*/      {"INC",  "@R0"     , _405 , 0                },
+/*11*/      {"INC",  "@R1"     , _405 , 0                },
+/*12*/      {"JB0",  "j"       , _405 , REFFLAG | CODEREF},
+/*13*/      {"ADDC", "A,#b"    , _405 , 0                },
+/*14*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*15*/      {"DIS",  "XI"      , _405 , 0                },
+/*16*/      {"JTF",  "j"       , _405 , REFFLAG | CODEREF},
+/*17*/      {"INC",  "A"       , _405 , 0                },
+
+/*18*/      {"INC",  "R0"      , _405 , 0                },
+/*19*/      {"INC",  "R1"      , _405 , 0                },
+/*1A*/      {"INC",  "R2"      , _405 , 0                },
+/*1B*/      {"INC",  "R3"      , _405 , 0                },
+/*1C*/      {"INC",  "R4"      , _405 , 0                },
+/*1D*/      {"INC",  "R5"      , _405 , 0                },
+/*1E*/      {"INC",  "R6"      , _405 , 0                },
+/*1F*/      {"INC",  "R7"      , _405 , 0                },
+
+/*20*/      {"XCH",  "A,@R0"   , _405 , 0                },
+/*21*/      {"XCH",  "A,@R1"   , _405 , 0                },
+/*22*/      {"MOV",  "PSR,A"   , _405 , 0                },
+/*23*/      {"MOV",  "A,#b"    , _405 , 0                },
+/*24*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*25*/      {"EN",   "II"      , _405 , 0                },
+/*26*/      {"",     ""        ,   0  , 0                },
+/*27*/      {"CLR",  "A"       , _405 , 0                },
+
+/*28*/      {"XCH",  "A,R0"    , _405 , 0                },
+/*29*/      {"XCH",  "A,R1"    , _405 , 0                },
+/*2A*/      {"XCH",  "A,R2"    , _405 , 0                },
+/*2B*/      {"XCH",  "A,R3"    , _405 , 0                },
+/*2C*/      {"XCH",  "A,R4"    , _405 , 0                },
+/*2D*/      {"XCH",  "A,R5"    , _405 , 0                },
+/*2E*/      {"XCH",  "A,R6"    , _405 , 0                },
+/*2F*/      {"XCH",  "A,R7"    , _405 , 0                },
+
+/*30*/      {"XCHD", "A,@R0"   , _405 , 0                },
+/*31*/      {"XCHD", "A,@R1"   , _405 , 0                },
+/*32*/      {"JB1",  "j"       , _405 , REFFLAG | CODEREF},
+/*33*/      {"MOV",  "UMX,A"   , _405 , 0                },
+/*34*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*35*/      {"DIS",  "TCNTI"   , _405 , 0                },
+/*36*/      {"JT0",  "j"       , _405 , 0                },
+/*37*/      {"CPL",  "A"       , _405 , 0                },
+
+/*38*/      {"INCL", "R0"      , _405 , 0                },
+/*39*/      {"INCL", "R1"      , _405 , 0                },
+/*3A*/      {"INC",  "CURS"    , _405 , 0                },
+/*3B*/      {"",     ""        ,   0  , 0                },
+/*3C*/      {"MOV",  "AL0,A"   , _405 , 0                },
+/*3D*/      {"MOV",  "AL1,A"   , _405 , 0                },
+/*3E*/      {"MOV",  "A,VPEN"  , _405 , 0                },
+/*3F*/      {"MOV",  "A,HFEN"  , _405 , 0                },
+
+/*40*/      {"ORL",  "A,@R0"   , _405 , 0                },
+/*41*/      {"ORL",  "A,@R1"   , _405 , 0                },
+/*42*/      {"MOV",  "A,T"     , _405 , 0                },
+/*43*/      {"ORL",  "A,#b"    , _405 , 0                },
+/*44*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*45*/      {"MOV",  "VCR,A"   , _405 , 0                },
+/*46*/      {"",     ""        ,   0  , 0                },
+/*47*/      {"SWAP", "A"       , _405 , 0                },
+
+/*48*/      {"ORL",  "A,R0"    , _405 , 0                },
+/*49*/      {"ORL",  "A,R1"    , _405 , 0                },
+/*4A*/      {"ORL",  "A,R2"    , _405 , 0                },
+/*4B*/      {"ORL",  "A,R3"    , _405 , 0                },
+/*4C*/      {"ORL",  "A,R4"    , _405 , 0                },
+/*4D*/      {"ORL",  "A,R5"    , _405 , 0                },
+/*4E*/      {"ORL",  "A,R6"    , _405 , 0                },
+/*4F*/      {"ORL",  "A,R7"    , _405 , 0                },
+
+/*50*/      {"ANL",  "A,@R0"   , _405 , 0                },
+/*51*/      {"ANL",  "A,@R1"   , _405 , 0                },
+/*52*/      {"JB2",  "j"       , _405 , REFFLAG | CODEREF},
+/*53*/      {"ANL",  "A,#b"    , _405 , 0                },
+/*54*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*55*/      {"MOV",  "SCR,A"   , _405 , 0                },
+/*56*/      {"",     ""        ,   0  , 0                },
+/*57*/      {"DA",   "A"       , _405 , 0                },
+
+/*58*/      {"ANL",  "A,R0"    , _405 , 0                },
+/*59*/      {"ANL",  "A,R1"    , _405 , 0                },
+/*5A*/      {"ANL",  "A,R2"    , _405 , 0                },
+/*5B*/      {"ANL",  "A,R3"    , _405 , 0                },
+/*5C*/      {"ANL",  "A,R4"    , _405 , 0                },
+/*5D*/      {"ANL",  "A,R5"    , _405 , 0                },
+/*5E*/      {"ANL",  "A,R6"    , _405 , 0                },
+/*5F*/      {"ANL",  "A,R7"    , _405 , 0                },
+
+/*60*/      {"ADD",  "A,@R0"   , _405 , 0                },
+/*61*/      {"ADD",  "A,@R1"   , _405 , 0                },
+/*62*/      {"MOV",  "T,A"     , _405 , 0                },
+/*63*/      {"ORL",  "PORT,#b" , _405 , 0                },
+/*64*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*65*/      {"STOP", "T"       , _405 , 0                },
+/*66*/      {"JNF1", "j"       , _405 , REFFLAG | CODEREF},
+/*67*/      {"RRC",  "A"       , _405 , 0                },
+
+/*68*/      {"ADD",  "A,R0"    , _405 , 0                },
+/*69*/      {"ADD",  "A,R1"    , _405 , 0                },
+/*6A*/      {"ADD",  "A,R2"    , _405 , 0                },
+/*6B*/      {"ADD",  "A,R3"    , _405 , 0                },
+/*6C*/      {"ADD",  "A,R4"    , _405 , 0                },
+/*6D*/      {"ADD",  "A,R5"    , _405 , 0                },
+/*6E*/      {"ADD",  "A,R6"    , _405 , 0                },
+/*6F*/      {"ADD",  "A,R7"    , _405 , 0                },
+
+/*70*/      {"ADDC", "A,@R0"   , _405 , 0                },
+/*71*/      {"ADDC", "A,@R1"   , _405 , 0                },
+/*72*/      {"JB3",  "j"       , _405 , REFFLAG | CODEREF},
+/*73*/      {"ANL",  "PORT,#b" , _405 , 0                },
+/*74*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*75*/      {"STRT", "T"       , _405 , 0                },
+/*76*/      {"JF1",  "j"       , _405 , REFFLAG | CODEREF},
+/*77*/      {"RR",   "A"       , _405 , 0                },
+
+/*78*/      {"ADDC", "A,R0"    , _405 , 0                },
+/*79*/      {"ADDC", "A,R1"    , _405 , 0                },
+/*7A*/      {"ADDC", "A,R2"    , _405 , 0                },
+/*7B*/      {"ADDC", "A,R3"    , _405 , 0                },
+/*7C*/      {"ADDC", "A,R4"    , _405 , 0                },
+/*7D*/      {"ADDC", "A,R5"    , _405 , 0                },
+/*7E*/      {"ADDC", "A,R6"    , _405 , 0                },
+/*7F*/      {"ADDC", "A,R7"    , _405 , 0                },
+
+/*80*/      {"MOVX", "@R0,A"   , _405 , 0                },
+/*81*/      {"MOVX", "@R1,A"   , _405 , 0                },
+/*82*/      {"MOV",  "MASK,A"  , _405 , 0                },
+/*83*/      {"RET",  ""        , _405 , LFFLAG           },
+/*84*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*85*/      {"CLR",  "F0"      , _405 , 0                },
+/*86*/      {"JNF0", "j"       , _405 , REFFLAG | CODEREF},
+/*87*/      {"MOV",  "TCP,A"   , _405 , 0                },
+
+/*88*/      {"MOVL", "R0,A"    , _405 , 0                },
+/*89*/      {"MOVL", "R1,A"    , _405 , 0                },
+/*8A*/      {"MOV",  "HOME,A"  , _405 , 0                },
+/*8B*/      {"MOV",  "CURS,A"  , _405 , 0                },
+/*8C*/      {"MOV",  "A,INTR"  , _405 , 0                },
+/*8D*/      {"MOVX", "@CURS,A" , _405 , 0                },
+/*8E*/      {"",     ""        ,   0  , 0                },
+/*8F*/      {"",     ""        ,   0  , 0                },
+
+/*90*/      {"MOVX", "A,@R0"   , _405 , 0                },
+/*91*/      {"MOVX", "A,@R1"   , _405 , 0                },
+/*92*/      {"JB4",  "j"       , _405 , REFFLAG | CODEREF},
+/*93*/      {"RETR", ""        , _405 , LFFLAG           },
+/*94*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*95*/      {"CPL",  "F0"      , _405 , 0                },
+/*96*/      {"JF0",  "j"       , _405 , REFFLAG | CODEREF},
+/*97*/      {"CLR",  "C"       , _405 , 0                },
+
+/*98*/      {"MOVL", "A,R2"    , _405 , 0                },
+/*99*/      {"MOVL", "A,R1"    , _405 , 0                },
+/*9A*/      {"MOV",  "A,HOME"  , _405 , 0                },
+/*9B*/      {"MOV",  "A,CURS"  , _405 , 0                },
+/*9C*/      {"MOV",  "A,STAT"  , _405 , 0                },
+/*9D*/      {"MOVX", "A,@CURS" , _405 , 0                },
+/*9E*/      {"",     ""        ,   0  , 0                },
+/*9F*/      {"",     ""        ,   0  , 0                },
+
+/*A0*/      {"MOV",  "@R0,A"   , _405 , 0                },
+/*A1*/      {"MOV",  "@R1,A"   , _405 , 0                },
+/*A2*/      {"MOV",  "VINT,A"  , _405 , 0                },
+/*A3*/      {"JMPP", "@A"      , _405 , LFFLAG           },
+/*A4*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*A5*/      {"CLR",  "F1"      , _405 , 0                },
+/*A6*/      {"JNXI", "j"       , _405 , REFFLAG | CODEREF},
+/*A7*/      {"CPL",  "C"       , _405 , 0                },
+
+/*A8*/      {"MOV",  "R0,A"    , _405 , 0                },
+/*A9*/      {"MOV",  "R1,A"    , _405 , 0                },
+/*AA*/      {"MOV",  "R2,A"    , _405 , 0                },
+/*AB*/      {"MOV",  "R3,A"    , _405 , 0                },
+/*AC*/      {"MOV",  "R4,A"    , _405 , 0                },
+/*AD*/      {"MOV",  "R5,A"    , _405 , 0                },
+/*AE*/      {"MOV",  "R6,A"    , _405 , 0                },
+/*AF*/      {"MOV",  "R7,A"    , _405 , 0                },
+
+/*B0*/      {"MOV",  "@R0,#b"  , _405 , 0                },
+/*B1*/      {"MOV",  "@R1,#b"  , _405 , 0                },
+/*B2*/      {"JB5",  "j"       , _405 , REFFLAG | CODEREF},
+/*B3*/      {"MOVP", "A,@A"    , _405 , 0                },
+/*B4*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*B5*/      {"CPL",  "F1"      , _405 , 0                },
+/*B6*/      {"JXI",  "j"       , _405 , REFFLAG | CODEREF},
+/*B7*/      {"MOV",  "@TCP,A"  , _405 , 0                },
+
+/*B8*/      {"MOV",  "R0,#b"   , _405 , 0                },
+/*B9*/      {"MOV",  "R1,#b"   , _405 , 0                },
+/*BA*/      {"MOV",  "R2,#b"   , _405 , 0                },
+/*BB*/      {"MOV",  "R3,#b"   , _405 , 0                },
+/*BC*/      {"MOV",  "R4,#b"   , _405 , 0                },
+/*BD*/      {"MOV",  "R5,#b"   , _405 , 0                },
+/*BE*/      {"MOV",  "R6,#b"   , _405 , 0                },
+/*BF*/      {"MOV",  "R7,#b"   , _405 , 0                },
+
+/*C0*/      {"OUT",  "XMTR"    , _405 , 0                },
+/*C1*/      {"OUT",  "PORT"    , _405 , 0                },
+/*C2*/      {"MOV",  "HACC,A"  , _405 , 0                },
+/*C3*/      {"SEL",  "RB0"     , _405 , 0                },
+/*C4*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*C5*/      {"SEL",  "MB0"     , _405 , 0                },
+/*C6*/      {"JZ",   "j"       , _405 , REFFLAG | CODEREF},
+/*C7*/      {"MOV",  "A,PSW"   , _405 , 0                },
+
+/*C8*/      {"DEC",  "R0"      , _405 , 0                },
+/*C9*/      {"DEC",  "R1"      , _405 , 0                },
+/*CA*/      {"DEC",  "R2"      , _405 , 0                },
+/*CB*/      {"DEC",  "R3"      , _405 , 0                },
+/*CC*/      {"DEC",  "R4"      , _405 , 0                },
+/*CD*/      {"DEC",  "R5"      , _405 , 0                },
+/*CE*/      {"DEC",  "R6"      , _405 , 0                },
+/*CF*/      {"DEC",  "R7"      , _405 , 0                },
+
+/*D0*/      {"XRL",  "A,@R0"   , _405 , 0                },
+/*D1*/      {"XRL",  "A,@R1"   , _405 , 0                },
+/*D2*/      {"JB6",  "j"       , _405 , REFFLAG | CODEREF},
+/*D3*/      {"XRL",  "A,#b"    , _405 , 0                },
+/*D4*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*D5*/      {"SEL",  "MB1"     , _405 , 0                },
+/*D6*/      {"JNZ",  "j"       , _405 , REFFLAG | CODEREF},
+/*D7*/      {"MOV",  "PSW,A"   , _405 , 0                },
+
+/*D8*/      {"XRL",  "A,R0"    , _405 , 0                },
+/*D9*/      {"XRL",  "A,R1"    , _405 , 0                },
+/*DA*/      {"XRL",  "A,R2"    , _405 , 0                },
+/*DB*/      {"XRL",  "A,R3"    , _405 , 0                },
+/*DC*/      {"XRL",  "A,R4"    , _405 , 0                },
+/*DD*/      {"XRL",  "A,R5"    , _405 , 0                },
+/*DE*/      {"XRL",  "A,R6"    , _405 , 0                },
+/*DF*/      {"XRL",  "A,R7"    , _405 , 0                },
+
+/*E0*/      {"IN",   "RCVR"    , _405 , 0                },
+/*E1*/      {"IN",   "PORT"    , _405 , 0                },
+/*E2*/      {"MOV",  "A,HACC"  , _405 , 0                },
+/*E3*/      {"SEL",  "RB1"     , _405 , 0                },
+/*E4*/      {"JMP",  "a"       , _405 , LFFLAG | REFFLAG | CODEREF},
+/*E5*/      {"SEL",  "MB2"     , _405 , 0                },
+/*E6*/      {"JNC",  "j"       , _405 , REFFLAG | CODEREF},
+/*E7*/      {"RL",   "A"       , _405 , 0                },
+
+/*E8*/      {"DJNZ", "R0,j"    , _405 , REFFLAG | CODEREF},
+/*E9*/      {"DJNZ", "R1,j"    , _405 , REFFLAG | CODEREF},
+/*EA*/      {"DJNZ", "R2,j"    , _405 , REFFLAG | CODEREF},
+/*EB*/      {"DJNZ", "R3,j"    , _405 , REFFLAG | CODEREF},
+/*EC*/      {"DJNZ", "R4,j"    , _405 , REFFLAG | CODEREF},
+/*ED*/      {"DJNZ", "R5,j"    , _405 , REFFLAG | CODEREF},
+/*EE*/      {"DJNZ", "R6,j"    , _405 , REFFLAG | CODEREF},
+/*EF*/      {"DJNZ", "R7,j"    , _405 , REFFLAG | CODEREF},
+
+/*F0*/      {"MOV",  "A,@R0"   , _405 , 0                },
+/*F1*/      {"MOV",  "A,@R1"   , _405 , 0                },
+/*F2*/      {"JB7",  "j"       , _405 , REFFLAG | CODEREF},
+/*F3*/      {"MOVP3","A,@A"    , _405 , 0                },
+/*F4*/      {"CALL", "a"       , _405 , REFFLAG | CODEREF},
+/*F5*/      {"SEL",  "MB3"     , _405 , 0                },
+/*F6*/      {"JC",   "j"       , _405 , REFFLAG | CODEREF},
+/*F7*/      {"RLC",  "A"       , _405 , 0                },
+
+/*F8*/      {"MOV",  "A,R0"    , _405 , 0                },
+/*F9*/      {"MOV",  "A,R1"    , _405 , 0                },
+/*FA*/      {"MOV",  "A,R2"    , _405 , 0                },
+/*FB*/      {"MOV",  "A,R3"    , _405 , 0                },
+/*FC*/      {"MOV",  "A,R4"    , _405 , 0                },
+/*FD*/      {"MOV",  "A,R5"    , _405 , 0                },
+/*FE*/      {"MOV",  "A,R6"    , _405 , 0                },
+/*FF*/      {"MOV",  "A,R7"    , _405 , 0                },
+};
+
+
 // search backwards to find SEL MB0/SEL MB1 to dentify JMP/CALL bank
 // only search as long as unbroken code for the current CPU is found
 // if none found, caller will assume it's already "correct" and use current bank
 // returns 0 if SEL MB0 found, 1 if SEL MB1 found, or -1 if neither
 int Dis8048::selmb(addr_t addr)
 {
+    // (the subtype check disables this for 8021)
     while ((_subtype == CPU_8048) && !rom.AddrOutRange(addr)) {
         // search for previous instr start byte:
         addr--;
@@ -692,6 +990,43 @@ int Dis8048::selmb(addr_t addr)
 }
 
 
+// selmb scanner for NS405
+int Dis8048::selmb405(addr_t addr)
+{
+    addr_t addr0 = addr;
+
+    while ((_subtype == CPU_405) && !rom.AddrOutRange(addr)) {
+        // search for previous instr start byte:
+        addr--;
+        while (!rom.AddrOutRange(addr) && rom.test_attr(addr, ATTR_CONT)) {
+            // it's a continuation byte, keep going back
+            addr--;
+        }
+
+        // check CPU type and return "unknown" if it's not for this CPU
+        if (rom.AddrOutRange(addr) || rom.get_type(addr) != _id) {
+            goto fail;
+        }
+
+        // stop searching if instr has lfflag set
+        if (NS405_opcdTable[rom.get_data(addr)].lfref & LFFLAG) {
+            goto fail;
+        }
+
+        // is it a SEL MBx instruction?
+        if ((rom.get_data(addr) & 0xCF) == 0xC5) {
+            // C5 = SEL MB0 -> 0 ... F5 = SEL MB3 -> 3
+            return (rom.get_data(addr) >> 4) & 3;
+        }
+    }
+    // ran past start of code image
+
+fail:
+    // return current bank
+    return (addr0 >> 11) & 3;
+}
+
+
 int Dis8048::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr)
 {
     unsigned short  ad;
@@ -709,6 +1044,7 @@ int Dis8048::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
         case CPU_8021:
         case CPU_8048: instr = &I8048_opcdTable[opcd]; break;
         case CPU_8041: instr = &I8041_opcdTable[opcd]; break;
+        case CPU_405:  instr = &NS405_opcdTable[opcd]; break;
     }
 
     strcpy(opcode, instr->op);
@@ -745,28 +1081,36 @@ int Dis8048::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             case 'a':   // 8048 long jump
                 // determine A11 from SEL MBx hints
                 i = rom.get_hint(addr);
-                switch(i) {
-                default:
-                case 0: // hint 0 = use auto-detected bank
-                    switch (selmb(addr)) {
-                        case 0: // SEL MB0
-                            ra = 0x0000;      break;
-                        case 1: // SEL MB1
-                            ra = 0x0800;      break;
-                        default: // floating
-                            ra = ad & 0x0800; break;
+
+               if (_subtype == CPU_405) {
+                   // NS405 has four code banks
+                   // add the hint as an offset to detected selmb
+                   ra = ((selmb405(addr) + i) << 11) & 0x1FFF;
+               } else {
+                    switch(i) {
+                    default:
+                    case 0: // hint 0 = use auto-detected bank
+                        switch (selmb(addr)) {
+                            case 0: // SEL MB0
+                                ra = 0x0000;      break;
+                            case 1: // SEL MB1
+                                ra = 0x0800;      break;
+                            default: // floating
+                                ra = ad & 0x0800; break;
+                        }
+                        break;
+                    case 1: // hint 1 = use current bank only
+                        ra = ad & 0x0800; break;
+                    case 2: // hint 2 = use SEL MB0 bank
+                        ra = 0x0000;      break;
+                    case 3: // hint 3 = use SEL MB1 bank
+                        ra = 0x0800;      break;
+                        break;
                     }
-                    break;
-                case 1: // hint 1 = use current bank only
-                    ra = ad & 0x0800; break;
-                case 2: // hint 2 = use SEL MB0 bank
-                    ra = 0x0000;      break;
-                case 3: // hint 3 = use SEL MB1 bank
-                    ra = 0x0800;      break;
-                    break;
+                    // get A0-A10 from opcode, keep A12-A15 unchanged
+                    ra |= ad & 0xF000;
                 }
-                // get A0-A10 from opcode, keep A12-A15 unchanged
-                ra |= (ad & 0xF000) | ((opcd << 3) & 0x0700);
+                ra |= ((opcd << 3) & 0x0700);
                 ra |= ReadByte(ad++);
                 len++;
 

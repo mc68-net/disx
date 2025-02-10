@@ -485,4 +485,12 @@ Bugs fixed:
 - 68HC11: ABY instruction was not recognized
 - 8048: hints now affect bank choice for long JMP/CALL
 
+4.4.0 - 2025-??-??
+
+New features:
+- add support for NS405 CPU (8048 variant)
+
+Bugs fixed:
+- reset hint flags when changing instr type
+
 ================

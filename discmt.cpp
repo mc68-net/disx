@@ -104,7 +104,7 @@ void SymDB::set_sym(addr_t addr, const char *s)
             if (p == head) {
                 // remove from head of list
                 head = p->next;
-                // invalidate the cached position!
+                // invalidate the cache pointer
                 cache = 0;
             } else {
                 // find previous comment
@@ -113,9 +113,10 @@ void SymDB::set_sym(addr_t addr, const char *s)
                     prev = c;
                 }
                 if (prev && prev->next == p) {
+                    // unlink the deleted comment
                     prev->next = p->next;
-                    // cache the new comment
-                    cache = p;
+                    // cache the next comment
+                    cache = p->next;
                     cache_prev = prev;
                 } else {
                     // should not get here!
@@ -123,6 +124,8 @@ void SymDB::set_sym(addr_t addr, const char *s)
                 }
             }
             // dispose of the old comment
+            assert(p != cache_prev);
+            assert(p != cache);
             free_sym(p);
         }
     }

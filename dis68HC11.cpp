@@ -1335,21 +1335,21 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
             case iBDirect: // nn,mask
                 i = ReadByte(ad++); // direct addr
                 j = ReadByte(ad++); // mask
-                sprintf(parms, "$%.2X,$%.2X", i, j);
+                sprintf(parms, "$%.2X,#$%.2X", i, j);
                 len += 2;
                 break;
 
             case iBIndexed: // nn,X,mask
                 i = ReadByte(ad++); // direct addr
                 j = ReadByte(ad++); // mask
-                sprintf(parms, "$%.2X,X,$%.2X", i, j);
+                sprintf(parms, "$%.2X,X,#$%.2X", i, j);
                 len += 2;
                 break;
 
             case iBIndexedY: // nn,Y,mask
                 i = ReadByte(ad++); // offset
                 j = ReadByte(ad++); // mask
-                sprintf(parms, "$%.2X,Y,$%.2X", i, j);
+                sprintf(parms, "$%.2X,Y,#$%.2X", i, j);
                 len += 2;
                 break;
 
@@ -1367,7 +1367,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 }
                 ra = (ad + k) & 0xFFFF;
                 RefStr(ra, s, lfref, refaddr);
-                sprintf(parms, "$%.2X,$%.2X,%s", i, j, s);
+                sprintf(parms, "$%.2X,#$%.2X,%s", i, j, s);
                 break;
 
             case iBXRelative: // nn,X,mask,addr
@@ -1384,7 +1384,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 }
                 ra = (ad + k) & 0xFFFF;
                 RefStr(ra, s, lfref, refaddr);
-                sprintf(parms, "$%.2X,X,$%.2X,%s", i, j, s);
+                sprintf(parms, "$%.2X,X,#$%.2X,%s", i, j, s);
                 break;
 
             case iBYRelative: // nn,Y,mask,addr
@@ -1401,7 +1401,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 }
                 ra = (ad + k) & 0xFFFF;
                 RefStr(ra, s, lfref, refaddr);
-                sprintf(parms, "$%.2X,Y,$%.2X,%s", i, j, s);
+                sprintf(parms, "$%.2X,Y,#$%.2X,%s", i, j, s);
                 break;
 
             case iExtended:

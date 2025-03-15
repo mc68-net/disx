@@ -2729,6 +2729,15 @@ void DisScrn::input_key(int key)
     int len = strlen(_cmd);
 
     switch (key) {
+        case -1: // no key
+            break;
+
+        // Some keys that shouldn't work in this mode, to let
+        // you know "hey dummy, look at the top of the screen!"
+        case KEY_DOWN:
+        case KEY_UP:
+            beep();
+            break;
 
         case 0x08: // BS
         case 0x7F: // DEL
@@ -2744,6 +2753,13 @@ void DisScrn::input_key(int key)
                 }
                 // backspace past beginning exits command input
                 _in_input = 0;
+                print_screen();
+            }
+            break;
+
+        case KEY_DC: // delete-character key (forward delete)
+            if (_cmd_pos < len) {
+                memcpy(_cmd + _cmd_pos, _cmd + _cmd_pos + 1, len - _cmd_pos + 1);
                 print_screen();
             }
             break;

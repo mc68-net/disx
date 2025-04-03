@@ -9,8 +9,10 @@
 
 // global scope comment storage object
 SymDB cmt;
-// global scope comment storage object
+// global scope symbols storage object
 SymDB sym;
+// global scope equates storage object
+SymDB equ;
 
 
 // =====================================================
@@ -133,7 +135,7 @@ void SymDB::set_sym(addr_t addr, const char *s)
 
 
 // =====================================================
-void SymDB::load_syms(const char *path)
+void SymDB::load_syms(const char *path, bool isComment)
 {
     // start with empty comments list
     free_syms();
@@ -155,6 +157,11 @@ void SymDB::load_syms(const char *path)
         int n = strlen(p);
         if (n && p[n-1] == '\n') {
             p[n-1] = 0;
+            n--;
+        }
+        if (n && p[n-1] == '\r') {
+            p[n-1] = 0;
+            n--;
         }
 
         // look for blank separator
@@ -162,9 +169,15 @@ void SymDB::load_syms(const char *path)
 
         // get addr and text and add the comment
         if (str) {
+            // remove everything after whitespace if not comment
+            if (!isComment) {
+                strtok(str, " \x09");
+            }
             *str++ = 0;
-            addr_t addr = HexVal(p);
-            set_sym(addr, str);
+            if (ishex(s[0])) {
+                addr_t addr = HexVal(p);
+                set_sym(addr, str);
+            }
         }
 
         // get next line of comments file

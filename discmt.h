@@ -37,7 +37,7 @@ public:
     const char *get_sym(addr_t addr);   // returns a comment string or NULL
     void set_sym(addr_t addr, const char *s); // sets/changes/deletes a comment
 
-    void load_syms(const char *path);   // load comments from a file
+    void load_syms(const char *path, bool isComment = false);   // load comments from a file
     void save_syms(const char *path);   // save comments to a file
     void free_syms();                   // delete all comments
 };
@@ -47,6 +47,8 @@ public:
 extern SymDB cmt;
 // global scope symbols storage object
 extern SymDB sym;
+// global scope equates storage object
+extern SymDB equ;
 
 
 #endif // _DISCMT_H_

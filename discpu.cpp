@@ -338,6 +338,30 @@ char *CPU::HxStr(uint32_t l, char *s) const
 
 
 // =====================================================
+bool CPU::ref_label(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
+{
+    // common code for the various RefStr functions
+
+    s[0] = 0;
+
+    if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
+        lfref |= REFFLAG;
+        make_label(addr, s);
+        refaddr = addr;
+        // note that if the label wasn't actually flagged as a label,
+        // make_label will leave the string empty, but refaddr will still be set
+    }
+
+    // check if equate defined at this address
+    const char *str;
+    if ((str = equ.get_sym(addr))) {
+        strcpy(s, str);
+    }
+
+    return !s[0];
+}
+
+// =====================================================
 char *CPU::RefStr2(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
     s[0] = 0;
@@ -346,10 +370,9 @@ char *CPU::RefStr2(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
         lfref |= REFFLAG;
         make_label(addr, s);
         refaddr = addr;
+        // note that if the label wasn't actually flagged as a label,
+        // make_label will leave the string empty, but refaddr will still be set
     }
-
-    // note that if the label wasn't actually flagged as a label,
-    // make_label will leave the string empty, but refaddr will still be set
 
     if (!s[0]) {
         H2Str(addr, s);
@@ -362,18 +385,7 @@ char *CPU::RefStr2(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 // =====================================================
 char *CPU::RefStr4(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
-    s[0] = 0;
-
-    if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
-        lfref |= REFFLAG;
-        make_label(addr, s);
-        refaddr = addr;
-    }
-
-    // note that if the label wasn't actually flagged as a label,
-    // make_label will leave the string empty, but refaddr will still be set
-
-    if (!s[0]) {
+    if (ref_label(addr, s, lfref, refaddr)) {
         H4Str(addr, s);
     }
 
@@ -384,18 +396,7 @@ char *CPU::RefStr4(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 // =====================================================
 char *CPU::RefStr6(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
-    s[0] = 0;
-
-    if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
-        lfref |= REFFLAG;
-        make_label(addr, s);
-        refaddr = addr;
-    }
-
-    // note that if the label wasn't actually flagged as a label,
-    // make_label will leave the string empty, but refaddr will still be set
-
-    if (!s[0]) {
+    if (ref_label(addr, s, lfref, refaddr)) {
         H6Str(addr, s);
     }
 
@@ -414,18 +415,7 @@ char *CPU::RefStr8(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
         addr--;
     }
 
-    s[0] = 0;
-
-    if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
-        lfref |= REFFLAG;
-        make_label(addr, s);
-        refaddr = addr;
-    }
-
-    // note that if the label wasn't actually flagged as a label,
-    // make_label will leave the string empty, but refaddr will still be set
-
-    if (!s[0]) {
+    if (ref_label(addr, s, lfref, refaddr)) {
         H8Str(addr, s);
     }
 

@@ -51,8 +51,6 @@ public:
     // disassemble an instruction and return the length in bytes, returns len or <=0 if invalid
     virtual int dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr) = 0;
 
-    void make_label(addr_t addr, char *s) const;
-
     static void show_list();
 
 public:
@@ -114,6 +112,10 @@ protected:
 
     // returns true if the address is an odd_code address
     static bool is_odd_code(addr_t addr);
+
+private:
+    bool ref_label(addr_t addr, char *s, int &lfref, addr_t &refaddr) const;
+    void make_label(addr_t addr, char *s) const;
 };
 
 extern CPU *curCpu;             // pointer to current CPU

@@ -154,6 +154,7 @@ extern DisScrn scrn;
 // now for some command line string processing functions
 int GetWord(char *&s, char *word);     	// get a word from s, and make it upper-case
 int GetString(char *&s, char *word);    // get a string optionally delimited by quotes
+int ishex(char c);
 int HexVal(const char *hexStr);         // get value of a hex string
 uint32_t DecVal(const char *decStr);         // get value of a decimal string
 bool HexValid(const char *hexStr);      // verify that a hex string is valid

@@ -657,12 +657,17 @@ ERROR:
     // read comments
     strcpy(path, rom._fname);
     strcat(path, ".cmt");
-    cmt.load_syms(path);
+    cmt.load_syms(path, true);
 
     // read symbols
     strcpy(path, rom._fname);
     strcat(path, ".sym");
     sym.load_syms(path);
+    
+    // read equates
+    strcpy(path, rom._fname);
+    strcat(path, ".equ");
+    equ.load_syms(path);
     
     rom.save_undo();
     rom._changed = false;

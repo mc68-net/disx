@@ -313,6 +313,7 @@ int DisStore::load_bin(const char *fname, addr_t ofs, addr_t size, addr_t base)
     unload();
     cmt.free_syms();
     sym.free_syms();
+    equ.free_syms();
 
     // open the file
     FILE *f = fopen(fname, "rb");

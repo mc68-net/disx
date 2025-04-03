@@ -3209,7 +3209,7 @@ void DisScrn::key_end()
 // =====================================================
 
 // =====================================================
-static int ishex(char c)
+int ishex(char c)
 {
     c = toupper(c);
     return isdigit(c) || ('A' <= c && c <= 'F');

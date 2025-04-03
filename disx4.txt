@@ -374,7 +374,8 @@ This is a rough estimation of the quality of each disassembler:
 2  dis78K3.cpp   - only tested on one code example
 2  dis8086.cpp   - very minimal, only useful for Small model code without segments
 2  dispdp11.cpp  - sort of works, but not enough examples, and it looks weird in hexadecimal
-3  disthumb.c    - needs work, and trouble dealing with odd code addresses (Thumb flag)
+3  disthumb.cpp  - needs work, and trouble dealing with odd code addresses (Thumb flag)
+2  dis2650.cpp   - seems to work okay
 
 === Q AND A ===
 
@@ -492,6 +493,7 @@ Bugs fixed:
 
 New features:
 - add support for NS405 CPU (8048 variant)
+- add Signetics 2650 disassembler
 
 Bugs fixed:
 - reset hint flags when changing instr type

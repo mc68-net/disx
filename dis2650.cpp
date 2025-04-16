@@ -355,7 +355,7 @@ int Dis2650::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
                 len++;
 
                 if (*l == 'z') {
-                RefStr2(ra, p, lfref, refaddr);
+                RefStr2(i, p, lfref, refaddr);
                 } else {
                     H2Str(i, p);
                 }

@@ -225,7 +225,7 @@ static const struct InstrRec M6800_opcdTable[] =
 /*63*/  {"COM"  , iIndexed   , _6800, 0                },
 /*64*/  {"LSR"  , iIndexed   , _6800, 0                },
 /*65*/  {"EIM"  , iMIndexed  , _6303, 0                }, // (6303 EIM iMIndexed)
-/*66*/  {"ROR"  , iIndexed   , _6800, 0                },
+/*66*/  {"ROR"  , iIndexed   , _6800, 0                },               
 /*67*/  {"ASR"  , iIndexed   , _6800, 0                },
 /*68*/  {"ASL"  , iIndexed   , _6800, 0                },
 /*69*/  {"ROL"  , iIndexed   , _6800, 0                },
@@ -1277,10 +1277,10 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
             case iDirect:
                 i = ReadByte(ad++); // direct addr
                 if (asmMode) {
-                    sprintf(parms, "<$%.2X", i);
-                } else {
-                    sprintf(parms,  "$%.2X", i);
+                    *parms++ = '<';
+                    *parms = 0;
                 }
+                RefStr2(i, parms, lfref, refaddr);
                 len++;
                 break;
 
@@ -1335,12 +1335,14 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
             case iBDirect: // nn,mask
                 i = ReadByte(ad++); // direct addr
                 j = ReadByte(ad++); // mask
-                sprintf(parms, "$%.2X,#$%.2X", i, j);
+                RefStr2(i, parms, lfref, refaddr);
+                parms += strlen(parms);
+                sprintf(parms, ",#$%.2X", j);
                 len += 2;
                 break;
 
             case iBIndexed: // nn,X,mask
-                i = ReadByte(ad++); // direct addr
+                i = ReadByte(ad++); // index
                 j = ReadByte(ad++); // mask
                 sprintf(parms, "$%.2X,X,#$%.2X", i, j);
                 len += 2;
@@ -1354,7 +1356,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 break;
 
             case iBDRelative: // nn,mask,addr
-                i = ReadByte(ad++); // direct addr
+                i = ReadByte(ad++); // offset
                 j = ReadByte(ad++); // mask
                 k = ReadByte(ad++); // branch
                 if (k == 0xFF) {
@@ -1371,7 +1373,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 break;
 
             case iBXRelative: // nn,X,mask,addr
-                i = ReadByte(ad++); // direct addr
+                i = ReadByte(ad++); // offset
                 j = ReadByte(ad++); // mask
                 k = ReadByte(ad++); // branch
                 if (k == 0xFF) {
@@ -1388,7 +1390,7 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 break;
 
             case iBYRelative: // nn,Y,mask,addr
-                i = ReadByte(ad++); // direct addr
+                i = ReadByte(ad++); // offset
                 j = ReadByte(ad++); // mask
                 k = ReadByte(ad++); // branch
                 if (k == 0xFF) {
@@ -1408,10 +1410,14 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 ra = ReadWord(ad); // addr16
                 ad += 2;
                 len += 2;
-                if (ra < 0x0100) { // add ">" to prevent direct addressing
-                    strcpy(parms,">");
+                if (ra < 0x0100) {
+                    // some of these opcodes have a direct addressing
+                    // equivalent, so add ">" to prevent direct
+                    // addressing in a re-assembly
+                    *parms++ = '>';
+                    *parms = 0;
                 }
-                RefStr(ra, parms+strlen(parms), lfref, refaddr);
+                RefStr(ra, parms, lfref, refaddr);
                 break;
 
             case iMIndexed: // #bits,$ofs,X
@@ -1427,7 +1433,9 @@ int Dis68HC11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 j = ReadByte(ad++); // direct addr
                 ad += 2;
                 len += 2;
-                sprintf(parms, "#$%.2X,$%.2X", i, j);
+                sprintf(parms, "#$%.2X,", i);
+                parms += strlen(parms);
+                RefStr2(j, parms, lfref, refaddr);
                 break;
         }
     } else {

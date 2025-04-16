@@ -1244,22 +1244,19 @@ int Dis6809::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
             break;
 
         case iDirect:
+            if (asmMode) {
+                *parms++ = '<';
+                *parms = 0;
+            }
             if (using_dpreg) {
                 ra = ReadByte(ad++) + dpreg;
                 RefStr(ra, s, lfref, refaddr);
-                if (asmMode) {
-                    sprintf(parms, "<%s", s);
-                } else {
-                    strcpy(parms, s);
-                }
             } else {
-                H2Str(ReadByte(ad++), s);
-                if (asmMode) {
-                    sprintf(parms, "<%s", s);
-                } else {
-                    sprintf(parms,  "%s", s);
-                }
+                // if DP value not specified, assume zero page
+                ra = ReadByte(ad++);
+                RefStr2(ra, s, lfref, refaddr);
             }
+            strcpy(parms, s);
             len++;
             break;
 
@@ -1454,6 +1451,11 @@ int Dis6809::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
 
 
 /*
+// This is for future handling of a custom command
+// to specify the assumed value of the DP register.
+// There will still be a potential problem in that
+// different sections of the code may use different
+// values of DP. (Example: the Vectrex)
 int Dis6809::CustomCommand(char *word)
 {
     // note that these values currently would not be saved in the .ctl file
@@ -1467,6 +1469,8 @@ int Dis6809::CustomCommand(char *word)
 
 
 /*
+// This needs to be worked into something that will add
+// the SETDP line to a listing output file.
 void Dis6809::InitPass(int pass)
 {
     char  s[256];

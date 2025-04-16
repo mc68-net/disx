@@ -1212,7 +1212,7 @@ static const struct InstrRec opcdTable65C816[] = {
 
 char *Dis6502::RefStrZP(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
-#if 0
+#if 1
     return RefStr2(addr, s, lfref, refaddr);
 #else
 (void) lfref;   // unused

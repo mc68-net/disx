@@ -366,15 +366,7 @@ char *CPU::RefStr2(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 {
     s[0] = 0;
 
-    if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
-        lfref |= REFFLAG;
-        make_label(addr, s);
-        refaddr = addr;
-        // note that if the label wasn't actually flagged as a label,
-        // make_label will leave the string empty, but refaddr will still be set
-    }
-
-    if (!s[0]) {
+    if (ref_label(addr, s, lfref, refaddr)) {
         H2Str(addr, s);
     }
 

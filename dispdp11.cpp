@@ -40,7 +40,7 @@ enum {
     CPU_PDP11,
 };
 
-DisPDP11 cpu_PDP11("PDP11", CPU_PDP11, LITTLE_END, ADDR_16, '*', '$', "DB", "DW", "DL");
+DisPDP11 cpu_PDP11("PDP11", CPU_PDP11, LITTLE_END, ADDR_16, '*', 'Q', "DB", "DW", "DL");
 
 
 DisPDP11::DisPDP11(const char *name, int subtype, int endian, int addrwid,
@@ -58,6 +58,7 @@ DisPDP11::DisPDP11(const char *name, int subtype, int endian, int addrwid,
     _endian  = endian;
     _hexchr  = hexChr;
     _addrwid = addrwid;
+    _radix   = RAD_OCT16LE;
 
     add_cpu();
 }
@@ -79,14 +80,6 @@ enum InstType {
     o_SPL,          // - one operand: 0-7
     o_EMT_TRAP,     // - EMT and TRAP opcodes, one operand in b0-b7
 };
-
-struct TrapRec {
-    uint16_t        trap;       // opcode of trap
-    char            bit_9;      // name of bit 9
-    char            bit_10;     // name of bit 10
-    const char      *name;      // name of trap
-};
-typedef const struct TrapRec *TrapPtr;
 
 
 static const struct InstrRec PDP11_opcdTable[] =
@@ -198,10 +191,10 @@ static const struct InstrRec PDP11_opcdTable[] =
     {0177700, 0106100, o_OneAddr, "ROLB", 0 },
     {0177700, 0106200, o_OneAddr, "ASRB", 0 },
     {0177700, 0106300, o_OneAddr, "ASLB", 0 },
-//  {0177700, 0106400, o_OneAddr, "", },
+//  {0177700, 0106400, o_OneAddr, "",     0 },
     {0177700, 0106500, o_OneAddr, "MFPD", 0 }, // * 1065SS 11/45
     {0177700, 0106600, o_OneAddr, "MTPD", 0 }, // * 1066DD 11/45
-//  {0177700, 0106700, o_OneAddr, "", },
+//  {0177700, 0106700, o_OneAddr, "",     0 },
 
     {0170000, 0110000, o_TwoAddr, "MOVB", 0 }, 
     {0170000, 0120000, o_TwoAddr, "CMPB", 0 }, 
@@ -285,7 +278,8 @@ void DisPDP11::AddrMode(int mode, int reg, char *parms, int addr, int &len, bool
                 RefStr(ra, parms, lfref, refaddr);
             } else {
                 n = FetchWord(addr, len);
-                sprintf(parms, "%.4X(R%d)", n, reg);
+                H4Str(n, s);
+                sprintf(parms, "%s(R%d)", s, reg);
             }
             break;
 
@@ -296,7 +290,8 @@ void DisPDP11::AddrMode(int mode, int reg, char *parms, int addr, int &len, bool
                 RefStr(ra, parms, lfref, refaddr);
             } else {
                 n = FetchWord(addr, len);
-                sprintf(parms, "%.4X(R%d)", n, reg);
+                H4Str(n, s);
+                sprintf(parms, "%s(R%d)", s, reg);
             }
             break;
 
@@ -349,11 +344,9 @@ InstrPtr DisPDP11::FindInstr(uint16_t opcd)
 int DisPDP11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr)
 {
     int         opcd;
-//    int         i;
     int         n;
     InstrPtr    instr;
     char        s[256];
-//  char        s2[256];
     addr_t      ra;
 
     opcode[0] = 0;
@@ -382,28 +375,26 @@ int DisPDP11::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_
                 break;
 
             case o_OneAddr:             // one operand: adrmode in b0-b5
-                SrcAddr(opcd,parms,addr,len,invalid,lfref,refaddr);
-//                sprintf(parms, "<R%d>", opcd & 7);
+                SrcAddr(opcd, parms, addr, len, invalid, lfref, refaddr);
                 break;
 
             case o_TwoAddr:             // one operand: adrmode in b0-b5
-                DstAddr(opcd,parms,addr,len,invalid,lfref,refaddr);
-                SrcAddr(opcd,s,addr,len,invalid,lfref,refaddr);
+                DstAddr(opcd, parms, addr, len, invalid, lfref, refaddr);
+                SrcAddr(opcd, s, addr, len, invalid, lfref, refaddr);
                 sprintf(parms + strlen(parms), ",%s", s);
                 break;
 
             case o_RegAddr:             // two operands: reg in b6-b8, adrmode in b0-b5
 // note: currently only used by JSR
-                SrcAddr(opcd,s,addr,len,invalid,lfref,refaddr);
+                SrcAddr(opcd, s, addr, len, invalid, lfref, refaddr);
                 if ((opcd & 0177077) == 004067) { // JSR Rn,nnnn(PC)
                     lfref |= CODEREF;
                 }
-//                sprintf(parms, "R%d,<R%d>", (opcd >> 6) & 7, opcd & 7);
                 sprintf(parms, "R%d,%s", (opcd >> 6) & 7, s);
                 break;
 
             case o_AddrReg:             // two operands: adrmode in b0-b5, reg in b6-b8
-                SrcAddr(opcd,s,addr,len,invalid,lfref,refaddr);
+                SrcAddr(opcd, s, addr, len, invalid, lfref, refaddr);
                 sprintf(parms, "%s,R%d", s, (opcd >> 6) & 7);
                 break;
 

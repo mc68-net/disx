@@ -41,6 +41,8 @@ public:
     static const char PIC12_status[][8];    
     
     InstrPtr FindInstr(uint16_t opcd);
+private:
+    void pic_reg(char *s, uint8_t reg);
 };
 
 enum {
@@ -124,38 +126,46 @@ const struct DisPIC::InstrRec DisPIC::PIC14_opcdTable[] =
     {0x3F9F, 0x0000, o_None,    "NOP"   , 0                },            // NOP
     {0x3FFF, 0x0008, o_None,    "RETURN", LFFLAG           },            // RETURN
     {0x3FFF, 0x0009, o_None,    "RETFIE", LFFLAG           },            // RETFIE
+    {0x3FFF, 0x0062, o_None,    "OPTION", 0                },            // OPTION
     {0x3FFF, 0x0063, o_None,    "SLEEP" , 0                },            // SLEEP
     {0x3FFF, 0x0064, o_None,    "CLRWDT", 0                },            // CLRWDT
-    {0x03F8, 0x0080, o_RegF,    "MOVWF" , 0                },            // MOVWF    f       f = 0..127
-    {0x03F8, 0x0100, o_None,    "CLRW"  , 0                },            // CLRW
-    {0x03F8, 0x0180, o_RegF,    "CLRF"  , 0                },            // CLRF
-    {0x03F0, 0x0200, o_RegFD,   "SUBWF" , 0                },            // SUBWF    f,d     f = 0..127, d = 0..1
-    {0x03F0, 0x0300, o_RegFD,   "DECF"  , 0                },            // DECF     f,d
-    {0x03F0, 0x0400, o_RegFD,   "IORWF" , 0                },            // IORWF    f,d
-    {0x03F0, 0x0500, o_RegFD,   "ANDWF" , 0                },            // ANDWF    f,d
-    {0x03F0, 0x0600, o_RegFD,   "XORWF" , 0                },            // XORWF    f,d
-    {0x03F0, 0x0700, o_RegFD,   "ADDWF" , 0                },            // ADDWF    f,d
-    {0x03F0, 0x0800, o_RegFD,   "MOVF"  , 0                },            // MOVF     f,d
-    {0x03F0, 0x0900, o_RegFD,   "COMF"  , 0                },            // COMF     f,d
-    {0x03F0, 0x0A00, o_RegFD,   "INCF"  , 0                },            // INCF     f,d
-    {0x03F0, 0x0B00, o_RegFD,   "DECFSZ", 0                },            // DECFSZ   f,d
-    {0x03F0, 0x0C00, o_RegFD,   "RRF"   , 0                },            // RRF      f,d
-    {0x03F0, 0x0D00, o_RegFD,   "RLF"   , 0                },            // RLF      f,d
-    {0x03F0, 0x0E00, o_RegFD,   "SWAPF" , 0                },            // SWAPF    f,d
-    {0x03F0, 0x0F00, o_RegFD,   "INCFSZ", 0                },            // INCFSZ   f,d
-    {0x03C0, 0x1000, o_RegFD,   "BCF"   , 0                },            // BCF      f,b     f = 0..127, b = 0..7
-    {0x03C0, 0x1400, o_RegFD,   "BSF"   , 0                },            // BSF      f,b
-    {0x03C0, 0x1800, o_RegFD,   "BTFSC" , 0                },            // BTFSC    f,b
-    {0x03C0, 0x1C00, o_RegFD,   "BTFSS" , 0                },            // BTFSS    f,b
+    {0x3FFC, 0x0064, o_TRIS,    "TRIS"  , 0                },            // TRIS GPIO
+
+    {0x3F80, 0x0080, o_RegF,    "MOVWF" , 0                },            // MOVWF    f       f = 0..127
+    {0x3F80, 0x0100, o_None,    "CLRW"  , 0                },            // CLRW
+    {0x3F80, 0x0180, o_RegF,    "CLRF"  , 0                },            // CLRF
+    {0x3F00, 0x0200, o_RegFD,   "SUBWF" , 0                },            // SUBWF    f,d     f = 0..127, d = 0..1
+    {0x3F00, 0x0300, o_RegFD,   "DECF"  , 0                },            // DECF     f,d
+    {0x3F00, 0x0400, o_RegFD,   "IORWF" , 0                },            // IORWF    f,d
+    {0x3F00, 0x0500, o_RegFD,   "ANDWF" , 0                },            // ANDWF    f,d
+    {0x3F00, 0x0600, o_RegFD,   "XORWF" , 0                },            // XORWF    f,d
+    {0x3F00, 0x0700, o_RegFD,   "ADDWF" , 0                },            // ADDWF    f,d
+    {0x3F00, 0x0800, o_RegFD,   "MOVF"  , 0                },            // MOVF     f,d
+    {0x3F00, 0x0900, o_RegFD,   "COMF"  , 0                },            // COMF     f,d
+    {0x3F00, 0x0A00, o_RegFD,   "INCF"  , 0                },            // INCF     f,d
+    {0x3F00, 0x0B00, o_RegFD,   "DECFSZ", 0                },            // DECFSZ   f,d
+    {0x3F00, 0x0C00, o_RegFD,   "RRF"   , 0                },            // RRF      f,d
+    {0x3F00, 0x0D00, o_RegFD,   "RLF"   , 0                },            // RLF      f,d
+    {0x3F00, 0x0E00, o_RegFD,   "SWAPF" , 0                },            // SWAPF    f,d
+    {0x3F00, 0x0F00, o_RegFD,   "INCFSZ", 0                },            // INCFSZ   f,d
+
+    {0x3C00, 0x1000, o_RegFD,   "BCF"   , 0                },            // BCF      f,b     f = 0..127, b = 0..7
+    {0x3C00, 0x1400, o_RegFD,   "BSF"   , 0                },            // BSF      f,b
+    {0x3C00, 0x1800, o_RegFD,   "BTFSC" , 0                },            // BTFSC    f,b
+    {0x3C00, 0x1C00, o_RegFD,   "BTFSS" , 0                },            // BTFSS    f,b
+
     {0x3800, 0x2000, o_CALL,    "CALL"  , REFFLAG | CODEREF},            // CALL     a       a = 0x0000..0x07FF
     {0x3800, 0x2800, o_GOTO,    "GOTO"  , LFFLAG | REFFLAG | CODEREF},   // GOTO     a       a = 0x0000..0x07FF
+
     {0x3C00, 0x3000, o_Lit,     "MOVLW" , 0                },            // MOVLW    k       k = 0..255
     {0x3C00, 0x3400, o_Lit,     "RETLW" , LFFLAG           },            // RETLW    k
     {0x3F00, 0x3800, o_Lit,     "IORLW" , 0                },            // IORLW    k
     {0x3F00, 0x3900, o_Lit,     "ANDLW" , 0                },            // ANDLW    k
     {0x3F00, 0x3A00, o_Lit,     "XORLW" , 0                },            // XORLW    k
+//  {0x3F00, 0x3B00, o_Lit,     ""      , 0                },            // reserved
     {0x3E00, 0x3C00, o_Lit,     "SUBLW" , 0                },            // SUBLW    k
     {0x3E00, 0x3E00, o_Lit,     "ADDLW" , 0                },            // ADDLW    k
+
     {0x0000, 0x0000, o_Invalid, ""      , 0                }
 };
 
@@ -179,6 +189,16 @@ const char DisPIC::PIC12_status[][8] =
 {
     "C", "DC", "Z", "!PD", "!TO", "PA0", "PA1", "PA2"
 };
+
+
+void DisPIC::pic_reg(char *s, uint8_t reg)
+{
+    if (_subtype == CPU_PIC12 && reg <= 0x09) {
+        strcpy(s, PIC12_reg[reg]);
+    } else {
+        sprintf(s, "%d", reg);
+    }
+}
 
 
 DisPIC::InstrPtr DisPIC::FindInstr(uint16_t opcd)
@@ -250,12 +270,14 @@ int DisPIC::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
 
             case o_TRIS:        // 2
 //              sprintf(parms, "%d", opcd & 0x07);
-                strcpy(parms, PIC12_reg[opcd & 0x07]);
+//              strcpy(parms, PIC12_reg[opcd & 0x07]);
+                pic_reg(parms, opcd & 0x07);
                 break;
 
             case o_RegF:        // 3
                 if (reg_f <= 0x09) {
-                    strcpy(parms, PIC12_reg[reg_f]);
+//                  strcpy(parms, PIC12_reg[reg_f]);
+                    pic_reg(parms, reg_f);
                 } else {
                     sprintf(parms, "%d", reg_f);
                 }
@@ -263,9 +285,12 @@ int DisPIC::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
 
             case o_RegFD:       // 4
                 if (reg_f <= 0x09) {
-                    sprintf(parms, "%s, %d", PIC12_reg[reg_f], reg_d);
+//                  sprintf(parms, "%s, %d", PIC12_reg[reg_f], reg_d);
+                    pic_reg(parms, reg_f);
+                    parms += strlen(parms);
+                    sprintf(parms, ",%d", reg_d);
                 } else {
-                    sprintf(parms, "%d, %d", reg_f, reg_d);
+                    sprintf(parms, "%d,%d", reg_f, reg_d);
                 }
                 if (lfref & REFFLAG) {
                     refaddr = ad+4;  // reference for skip instruction
@@ -274,9 +299,12 @@ int DisPIC::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
 
             case o_RegFB:       // 5
                 if (reg_f <= 0x09) {
-                    sprintf(parms, "%s, %d", PIC12_reg[reg_f], reg_b);
+//                  sprintf(parms, "%s,%d", PIC12_reg[reg_f], reg_b);
+                    pic_reg(parms, reg_f);
+                    sprintf(parms, ",%d", reg_b);
+                    parms += strlen(parms);
                 } else {
-                    sprintf(parms, "%d, %d", reg_f, reg_b);
+                    sprintf(parms, "%d,%d", reg_f, reg_b);
                 }
 #if 0
                 if (reg_f == 0x03) {

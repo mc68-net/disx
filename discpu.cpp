@@ -263,14 +263,22 @@ int CPU::ReadLongLE(addr_t addr) const
 // =====================================================
 char *CPU::H2Str(uint8_t b, char *s) const
 {
-    if (_hexchr == '$') {
-        sprintf(s, "$%.2X", b);
-    } else {
-        if (b > 0x9F) {
-            sprintf(s, "0%.2XH", b);
-        } else {
-            sprintf(s, "%.2XH", b);
-        }
+    switch (_hexchr) {
+        case '$':
+            sprintf(s, "$%.2X", b);
+            break;
+        case 'O':
+        case 'Q':
+            sprintf(s, "%.3o%c", b, _hexchr);
+            break;
+        default:
+        case 'H':
+            if (b > 0x9F) {
+                sprintf(s, "0%.2XH", b);
+            } else {
+                sprintf(s, "%.2XH", b);
+            }
+            break;
     }
     return s;
 }
@@ -279,14 +287,22 @@ char *CPU::H2Str(uint8_t b, char *s) const
 // =====================================================
 char *CPU::H4Str(uint16_t w, char *s) const
 {
-    if (_hexchr == '$') {
-        sprintf(s, "$%.4X", w);
-    } else {
-        if (w > 0x9FFF) {
-            sprintf(s, "0%.4XH", w);
-        } else {
-            sprintf(s, "%.4XH", w);
-        }
+    switch (_hexchr) {
+        case '$':
+            sprintf(s, "$%.4X", w);
+            break;
+        case 'O':
+        case 'Q':
+            sprintf(s, "%.6o%c", w, _hexchr);
+            break;
+        default:
+        case 'H':
+            if (w > 0x9FFF) {
+                sprintf(s, "0%.4XH", w);
+            } else {
+                sprintf(s, "%.4XH", w);
+            }
+            break;
     }
     return s;
 }
@@ -295,14 +311,20 @@ char *CPU::H4Str(uint16_t w, char *s) const
 // =====================================================
 char *CPU::H6Str(uint32_t l, char *s) const
 {
-    if (_hexchr == '$') {
-        sprintf(s, "$%.6X", l);
-    } else {
-        if (l > 0x9FFFFF) {
-            sprintf(s, "0%.6XH", l);
-        } else {
-            sprintf(s, "%.6XH", l);
-        }
+    switch (_hexchr) {
+        case '$':
+            sprintf(s, "$%.6X", l);
+            break;
+        case 'O':
+        case 'Q':
+            // Note: octal not supported here
+        default:
+        case 'H':
+            if (l > 0x9FFFFF) {
+                sprintf(s, "0%.6XH", l);
+            } else {
+                sprintf(s, "%.6XH", l);
+            }
     }
     return s;
 }
@@ -311,14 +333,20 @@ char *CPU::H6Str(uint32_t l, char *s) const
 // =====================================================
 char *CPU::H8Str(uint32_t l, char *s) const
 {
-    if (_hexchr == '$') {
-        sprintf(s, "$%.8X", l);
-    } else {
-        if (l > 0x9FFFFFFF) {
-            sprintf(s, "0%.8XH", l);
-        } else {
-            sprintf(s, "%.8XH", l);
-        }
+    switch (_hexchr) {
+        case '$':
+            sprintf(s, "$%.8X", l);
+            break;
+        case 'O':
+        case 'Q':
+            // Note: octal not supported here
+        default:
+        case 'H':
+            if (l > 0x9FFFFFFF) {
+                sprintf(s, "0%.8XH", l);
+            } else {
+                sprintf(s, "%.8XH", l);
+            }
     }
     return s;
 }
@@ -565,7 +593,7 @@ void DisDefault::byte_dis_line(addr_t addr, char *opcode, char *parms) const
         if (i) {
             p = stpcpy(p, ",");
         }
-        H2Str(rom.get_data(addr++),p);
+        H2Str(rom.get_data(addr++), p);
         p += strlen(p);
 
         // avoid buffer overflow the lazy way

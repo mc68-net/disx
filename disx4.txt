@@ -377,7 +377,7 @@ This is a rough estimation of the quality of each disassembler:
 1  dis78K0.cpp   - the code that I thought was 78K0 turned out to be 78K3, so no examples
 2  dis78K3.cpp   - only tested on one code example
 2  dis8086.cpp   - very minimal, only useful for Small model code without segments
-2  dispdp11.cpp  - sort of works, but not enough examples, and it looks weird in hexadecimal
+2  dispdp11.cpp  - sort of works, but not enough examples
 2  dis2650.cpp   - seems to work okay on a few samples
 
 === Q AND A ===
@@ -498,10 +498,12 @@ New features:
 - add support for NS405 CPU (8048 variant)
 - add Signetics 2650 disassembler
 - add Motorola 68HC12 disassembler
+- add octal object code output to make PDP-11 look right
 
 Bugs fixed:
 - reset hint flags when changing instr type
 - Z80: fix Intel 8080 opcode table
 - fixed pointer use-after-free bug in comments/labels code
+- PIC 14-bit was completely wrong
 
 ================

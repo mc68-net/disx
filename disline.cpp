@@ -308,6 +308,70 @@ char *DisLine::add_tab(char *s, int column, bool forceblank) const
 
 
 // =====================================================
+void DisLine::format_hex(addr_t addr, int len, char *s, int width) const
+{
+    char *p = s;
+    *p = 0;
+    CPU *cpu = curCpu;
+    bool too_wide = false;
+
+    // NOTE: 's' is assumed to have extra buffer space past 'width'.
+    //       This allows a partial word to be displayed.
+
+    for (int i = 0; i < len; i++) {
+        if (p-s > width) {
+            too_wide = true;
+            break;
+        }
+        // insert blanks between everything but hex bytes
+        if ((i>0) && ((cpu->_radix & RAD_OCT) || (cpu->_radix & RAD_16))) {
+            *p++ = ' ';
+            *p = 0;
+        }
+
+        uint16_t data = rom.get_data(addr + i);
+        if ((cpu->_radix & RAD_16) && (len-i > 1)) {
+            data = data * 256 + rom.get_data(addr + i+1);
+            if (cpu->_radix & RAD_LE) {
+                data = (data>>8) | (data<<8);
+            }
+        }
+
+        if (cpu->_radix & RAD_OCT) {
+            // OCTAL
+            if ((cpu->_radix & RAD_16) && (len-i > 1)) {
+                // OCTAL WORDS
+                sprintf(p, "%.6o", data);
+                i++;
+            } else {
+                // OCTAL BYTES
+                sprintf(p, "%.3o", data);
+            }
+        } else {
+            // HEX
+            if ((cpu->_radix & RAD_16) && (len-i > 1)) {
+                // HEX WORDS
+                sprintf(p, "%.4X", data);
+                i++;
+            } else {
+                // HEX BYTES
+                sprintf(p, "%.2X", data);
+            }
+        }
+
+        p += strlen(p);
+        *p = 0;
+    }
+
+    if (too_wide || (p-s > width-1)) {
+        if (p-s > width-4) {
+            p = s + width - 4;
+        }
+        strcpy(p, "...");
+    }
+}
+
+// =====================================================
 void DisLine::build_line(addr_t addr, char *s, const char *opcode,
                          const char* parms, int ofs, int flags) const
 {
@@ -325,7 +389,11 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
     if (line_cols & B_ADDR) {
         // add address
         if (defCpu->_addrwid == ADDR_16) {
-            sprintf(p, "%.4X:", (unsigned) addr + ofs);
+            if (defCpu->_radix & RAD_OCT) {
+                sprintf(p, "%.6o:", (unsigned) addr + ofs);
+            } else {
+                sprintf(p, "%.4X:", (unsigned) addr + ofs);
+            }
         } else {
             sprintf(p, "%.6X:", (unsigned) addr + ofs);
         }
@@ -353,20 +421,7 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
     if (line_cols & B_HEX) {
         // add hex dump
         if (!ofs) { // only put hex on zero-offset lines
-            // compute max hex bytes on line
-            // note: this only works with even tab widths!
-            int max = tabs[T_HEX] / 2 - 1;
-
-            // put data bytes
-            for (int i = 0; i < len; i++) {
-                // if 7th out of 8 or more in a 16-char field
-                if (i == max - 1 && len > max) {
-                    strcat(p, "...");
-                    break;
-                }
-                sprintf(p, "%.2X", rom.get_data(addr + i));
-                p += strlen(p);
-            }
+            format_hex(addr, len, p, tabs[T_HEX]);
         }
 
         p = add_tab(s, T_HEX, false);

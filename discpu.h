@@ -12,13 +12,27 @@
 // base class with basic functionality for disassembly
 
 enum {
+    // _endian: endian for inline words
     UNKNOWN_END = -1,
     LITTLE_END  = 0, // for isBigEnd
     BIG_END     = 1, // for isBigEnd
 
-    ADDR_16     = 4, // for addrwid
+    // _addrwid: preferred display width of addresses
+    ADDR_16     = 4,
     ADDR_24     = 6,
     ADDR_32     = 8,
+
+    // _radix: controls display of object code bytes
+    RAD_HEX     = 0,            // radix hexadecimal
+    RAD_OCT     = 1,            // radix octal
+    RAD_ENDIAN  = 0x40,         // endian mask
+    RAD_BE      = 0,            // big-endian for RAD_16
+    RAD_LE      = RAD_ENDIAN,   // little-endian for RAD_16
+    RAD_16      = 0x80,         // 16-bit
+    RAD_HEX16BE = RAD_HEX + RAD_16,          // 16-bit hex big-endian
+    RAD_HEX16LE = RAD_HEX + RAD_16 + RAD_LE, // 16-bit hex little-endian
+    RAD_OCT16BE = RAD_OCT + RAD_16,          // 16-bit octal big-endian
+    RAD_OCT16LE = RAD_OCT + RAD_16 + RAD_LE, // 16-bit octal little-endian
 };
 
 class CPU {
@@ -46,6 +60,7 @@ public:
     char    _hexchr;      // $ for motorola style $FFFF, H for Intel style 0FFFFH
     uint8_t _addrwid;     // preferred address width, =4 for most 8-bit, =6 for 68000/10
     bool    _usefcc;      // use Motorola FCC pseudo-op
+    uint8_t _radix;       // display radix (default 8-bit hex)
 
 public:
     // disassemble an instruction and return the length in bytes, returns len or <=0 if invalid

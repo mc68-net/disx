@@ -98,6 +98,7 @@ public:
 
 private:
     char *add_tab(char *s, int column, bool forceblank = true) const;
+    void format_hex(addr_t addr, int len, char *s, int width) const;
 };
 
 

@@ -115,7 +115,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_ebc();          // handle '_' command
     void do_cmd_rl();           // handle ctrl-'\' command
     void do_cmd_cL();           // handle ctrl-'L' command
-    void do_cmd_L();            // handle 'L' command
+    void do_cmd_Open();         // handle 'O' command
     void do_cmd_cR();           // handle ctrl-'R' command
     void do_cmd_cU();           // handle ctrl-'U' command
     void do_cmd_T();            // handle 'T' command
@@ -132,6 +132,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_fwd();          // handle '>' command
     void do_cmd_cen();          // handle '`' command
     void do_cmd_top();          // handle '~' command
+    void do_cmd_center();       // handle 'M' command
     void do_cmd_cln();          // handle '!' command
     void do_cmd_prv();          // handle ',' command
     void do_cmd_nxt();          // handle '.' command

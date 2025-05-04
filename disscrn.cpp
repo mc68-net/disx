@@ -41,9 +41,9 @@ struct cmd_char_t char_cmds[] =
     { 'd',  &DisScrn::do_cmd_d   }, // disassemble as decimal word
     { 'D',  &DisScrn::do_cmd_D   }, // disassemble as decimal long
     { 'I',  &DisScrn::do_cmd_I   }, // disassemble as binary
-    { 'X',  &DisScrn::do_cmd_X   }, // disassemble as big-endian binary X
+ // { 'X',  &DisScrn::do_cmd_X   }, // disassemble as big-endian binary X
     { '_',  &DisScrn::do_cmd_ebc }, // disasssemble as ebcdic
-    { 'O',  &DisScrn::do_cmd_O   }, // disassemble as little-endian binary O
+ // { 'O',  &DisScrn::do_cmd_O   }, // disassemble as little-endian binary O
     { 'o',  &DisScrn::do_cmd_o   }, // disassemble as offset table entry
     { '|',  &DisScrn::do_cmd_rl  }, // shft-\ disassemble as reverse longs
     { '*',  &DisScrn::do_cmd_rpt }, // repeat previous b/w/|/a/h command
@@ -53,10 +53,9 @@ struct cmd_char_t char_cmds[] =
     { 'C',  &DisScrn::do_cmd_C   }, // disassemble as code until lfflag or illegal
     { 'T',  &DisScrn::do_cmd_T   }, // shft-T trace disassembly from _sel
     { 0x14, &DisScrn::do_cmd_cT  }, // ctrl-T trace disassembly from refaddr
-    { '^',  &DisScrn::do_cmd_lbl }, // toggle label type at refaddr
-    { 0x0C, &DisScrn::do_cmd_cL  }, // ctrl-L toggle label type
-    { 'L',  &DisScrn::do_cmd_cL  }, // shift-L toggle label type
-    { 'l',  &DisScrn::do_cmd_L   }, // L toggle pre-instruction blank line
+    { 0x0C, &DisScrn::do_cmd_lbl }, // ctrl-L toggle label type at refaddr
+    { '^',  &DisScrn::do_cmd_cL  }, // toggle this line's label type
+    { 'O',  &DisScrn::do_cmd_Open   }, // O toggle pre-instruction blank line
     { 0x12, &DisScrn::do_cmd_cR  }, // ctrl-R toggle NOREF for this code address
     { 0x15, &DisScrn::do_cmd_cU  }, // ctrl-U save undo buffer
     { 'U',  &DisScrn::do_cmd_U   }, // shft-U swap undo buffer
@@ -71,6 +70,8 @@ struct cmd_char_t char_cmds[] =
 
     { '`',  &DisScrn::do_cmd_cen }, // recenter screen
     { '~',  &DisScrn::do_cmd_top }, // move selecton to near top of screen
+    { 'H',  &DisScrn::do_cmd_top }, // move selecton to near top of screen
+    { 'M',  &DisScrn::do_cmd_center }, // move selecton to center of screen
 
     { '!',  &DisScrn::do_cmd_cln }, // clean up current label if not referenced
 
@@ -2559,10 +2560,17 @@ void DisScrn::do_cmd_top()
     print_screen();
 }
 
+void DisScrn::do_cmd_center()
+{
+    set_sel_line(max_row() / 2);
+    print_screen();
+}
+
+
 
 // =====================================================
-// toggle the ATTR_LF0 flag
-void DisScrn::do_cmd_L()
+// toggle the ATTR_LF0 flag indicating a blank line above this one
+void DisScrn::do_cmd_Open()
 {
     // toggle the ATTR_LF0 flag
     rom.toggle_attr_flag(_sel.addr, ATTR_LF0);
@@ -2926,11 +2934,13 @@ void DisScrn::do_key(int key)
             break;
 
         case KEY_UP: // up arrow
+        case 'k': // (vi) move up a line
             key_up_arrow();
             print_screen();
             break;
 
         case KEY_DOWN: // down arrow
+        case 'j':      // (vi)
             key_down_arrow();
             print_screen();
             break;
@@ -2952,6 +2962,7 @@ void DisScrn::do_key(int key)
 
         case ' ': // space bar
         case KEY_NPAGE: // PgDn
+        case 0x06: // ctrl-F: page forward (vi)
             key_page_down();
             print_screen();
             break;

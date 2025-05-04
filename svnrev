@@ -3,6 +3,12 @@
 # prints "r###" if no files are different, else prints "r###+"
 # if svn is not found, prints the empty string
 
+if [[ -r .git ]]; then
+    echo -n '_git'
+    git describe --always --dirty
+    exit 0
+fi
+
 # if svn client is not in path, print a blank line and exit
 # note the "2>/dev/null" before the command to suppress stderr
 if [ "_$(2>/dev/null which svn)" == "_" ] ; then

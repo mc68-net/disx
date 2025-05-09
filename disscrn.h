@@ -74,6 +74,8 @@ private:
     void input_key(int key);    // handle key input for command line
     void cmd_key(int key);      // handle single-key command
     void do_cmd_line();         // handle command in 'cmd'
+    void do_label_sel();        // label current line
+    void do_label_refaddr();    // label line referenced by this line
     void do_search(bool fwd);   // do search
     bool load_comment();        // load a comment for editing
     void do_comment();          // do comment
@@ -114,7 +116,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_o();            // handle 'o' command
     void do_cmd_ebc();          // handle '_' command
     void do_cmd_rl();           // handle ctrl-'\' command
-    void do_cmd_cL();           // handle ctrl-'L' command
+    void do_cmd_lbltyp();
     void do_cmd_Open();         // handle 'O' command
     void do_cmd_cR();           // handle ctrl-'R' command
     void do_cmd_cU();           // handle ctrl-'U' command
@@ -126,7 +128,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_w1();           // handle ctrl-W command
     void do_cmd_x();            // handle 'x' command
     void do_cmd_rpt();          // handle '*' command
-    void do_cmd_lbl();          // handle '^' command
+    void do_cmd_reflbltyp();    // handle '^' command
     void do_cmd_ref();          // handle '@' command
     void do_cmd_bak();          // handle '<' command
     void do_cmd_fwd();          // handle '>' command

@@ -51,10 +51,10 @@ struct cmd_char_t char_cmds[] =
 
     { 'c',  &DisScrn::do_cmd_c   }, // disassemble as code
     { 'C',  &DisScrn::do_cmd_C   }, // disassemble as code until lfflag or illegal
-    { 'T',  &DisScrn::do_cmd_T   }, // shft-T trace disassembly from _sel
-    { 0x14, &DisScrn::do_cmd_cT  }, // ctrl-T trace disassembly from refaddr
-    { 0x0C, &DisScrn::do_cmd_lbl }, // ctrl-L toggle label type at refaddr
-    { '^',  &DisScrn::do_cmd_cL  }, // toggle this line's label type
+    { 't',  &DisScrn::do_cmd_T   }, // trace disassembly from _sel
+    { 'T',  &DisScrn::do_cmd_cT  }, // trace disassembly from refaddr
+    { '"', &DisScrn::do_cmd_reflbltyp }, // ctrl-L toggle label type at refaddr
+    { '\'',  &DisScrn::do_cmd_lbltyp  }, // toggle this line's label type
     { 'O',  &DisScrn::do_cmd_Open   }, // O toggle pre-instruction blank line
     { 0x12, &DisScrn::do_cmd_cR  }, // ctrl-R toggle NOREF for this code address
     { 0x15, &DisScrn::do_cmd_cU  }, // ctrl-U save undo buffer
@@ -63,19 +63,21 @@ struct cmd_char_t char_cmds[] =
     { '[',  &DisScrn::do_cmd_prv }, // go to previous label
     { ']',  &DisScrn::do_cmd_nxt }, // go to next label
     { '<',  &DisScrn::do_cmd_bak }, // go to previous address from @ or :addr
+    { 0x14, &DisScrn::do_cmd_bak }, // ^T (v) "pop tag stack"
     { '>',  &DisScrn::do_cmd_fwd }, // go to next stacked address from @ or :addr
     { '@',  &DisScrn::do_cmd_ref }, // go to refaddr
+    { 0x1D, &DisScrn::do_cmd_ref }, // ^] (vi) "go to tag definition"
     { '(',  &DisScrn::do_cmd_les }, // less data
     { ')',  &DisScrn::do_cmd_mor }, // more data
 
     { '`',  &DisScrn::do_cmd_cen }, // recenter screen
+    { 'M',  &DisScrn::do_cmd_center }, // move selecton to center of screen
     { '~',  &DisScrn::do_cmd_top }, // move selecton to near top of screen
     { 'H',  &DisScrn::do_cmd_top }, // move selecton to near top of screen
-    { 'M',  &DisScrn::do_cmd_center }, // move selecton to center of screen
 
     { '!',  &DisScrn::do_cmd_cln }, // clean up current label if not referenced
 
-    { '"',  &DisScrn::do_cmd_hint }, // toggle hint flags in current instr
+    { 'F',  &DisScrn::do_cmd_hint }, // toggle hint flags in current instr
     { '$',  &DisScrn::do_cmd_defhint }, // toggle default hint flags
 
     {  0,   NULL  }
@@ -1094,6 +1096,25 @@ void DisScrn::do_cmd_label(char *p)
         rom._changed = true;
         print_screen();
     }
+}
+
+void DisScrn::do_label_sel()
+{
+    do_cmd_label(_cmd);
+}
+
+void DisScrn::do_label_refaddr()
+{
+    //  XXX copy/paste/hack from: do_cmd_cT(), do_cmd_ref(), do_cmd_label()
+    addrline_t save = _sel;         // save current selection
+    addr_t refaddr = get_refaddr(); // get refaddr for current line
+    if (!refaddr)  return;          // exit if no refaddr
+    _sel.line_start(refaddr);       // set current line to refaddr line
+    do_cmd_label(_cmd);             // set label for that line
+    _sel = save;                    // restore current line
+    //  We need to reprint the screen because do_cmd_label() updated it,
+    //  but unfortunately this moves the cursor line to "near the top."
+    print_screen();
 }
 
 
@@ -2132,7 +2153,7 @@ if (label) {
 
 // =====================================================
 // toggle label type
-void DisScrn::do_cmd_cL()
+void DisScrn::do_cmd_lbltyp()
 {
     // ignore if on LF0 pre-blank line
     int line = _sel.line;
@@ -2196,7 +2217,7 @@ void DisScrn::do_cmd_cL()
 
 // =====================================================
 // toggle label type at refadr
-void DisScrn::do_cmd_lbl()
+void DisScrn::do_cmd_reflbltyp()
 {
     char s[256] = {0};
     int lfref = 0;
@@ -2798,6 +2819,14 @@ void DisScrn::input_key(int key)
                     do_comment();
                     break;
 
+                case 'l':
+                    do_label_sel();
+                    break;
+
+                case 'L':
+                    do_label_refaddr();
+                    break;
+
                 default:
                     // shouldn't get here
                     break;
@@ -2967,6 +2996,7 @@ void DisScrn::do_key(int key)
             print_screen();
             break;
 
+        case 0x0C:       // Ctrl-L (vi) refresh scren
         case KEY_RESIZE: // display size change (SIGWINCH)
             // note: these first two lines are normally done
             // in the ncurses SIGWINCH handler
@@ -2987,6 +3017,8 @@ void DisScrn::do_key(int key)
         case ':': // start command line
         case '/': // start search forward
         case '?': // start search backward
+        case 'L': // label current line
+        case 'l': // label target of current line
             error(NULL);
             _cmd[0] = 0;
             _cmd_col = 0;

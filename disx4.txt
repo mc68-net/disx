@@ -361,7 +361,7 @@ This is a rough estimation of the quality of each disassembler:
 5  dis6809.cpp   - heavy usage and re-assmblies, no 6309 support
 5  dis68HC11.cpp - tested with many re-assemblies, but few 6303 examples
 2  dis68HC12.cpp - tested on an example and an "all opcodes" binary
-2  dis68HC05.cpp - few examples to test it on
+3  dis68HC05.cpp - few examples to test it on
 5  dis68k.cpp    - heavy usage and re-assmblies
 4  dis8051.cpp   - tested with many re-assemblies
 3  dis8048.cpp   - tested with re-assemblies, but suffers from guessing bank selects

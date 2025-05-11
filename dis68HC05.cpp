@@ -63,7 +63,7 @@ enum InstType
     iIX2,        // $ofs16,X
     iExtended,   // addr16
     iBRelative,  // bit,$dir,reladdr
-    iBSETBCLR,   // bit, $dir
+    iBSETBCLR,   // bit,$dir
 };
 
 struct InstrRec {
@@ -382,10 +382,10 @@ int Dis68HC05::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
             case iDirect:
                 i = ReadByte(ad++); // direct addr
                 if (asmMode) {
-                    sprintf(parms, "<$%.2X", i);
-                } else {
-                    sprintf(parms,  "$%.2X", i);
+                    *parms++ = '<';
+                    *parms = 0;
                 }
+                RefStr2(i, parms, lfref, refaddr);
                 len++;
                 break;
 
@@ -437,7 +437,8 @@ int Dis68HC05::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
 
             case iIX2: // ofs16,X
                 i = ReadWord(ad); // ofs16
-                sprintf(parms, "$%.4X,X", i);
+                RefStr(i, s, lfref, refaddr);
+                sprintf(parms, "%s,X", s);
                 ad += 2;
                 len += 2;
                 break;
@@ -455,8 +456,12 @@ int Dis68HC05::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                     k = k - 256;
                 }
                 ra = (ad + k) & 0xFFFF;
-                RefStr(ra, s, lfref, refaddr);
-                sprintf(parms, "%d,$%.2X,%s", i, j, s);
+                k = lfref; // don't let dir page affect code ref status
+                RefStr2(j, s, lfref, refaddr);
+                sprintf(parms, "%d,%s,", i, s);
+                lfref = k;
+                parms += strlen(parms);
+                RefStr(ra, parms, lfref, refaddr);
                 break;
 
             case iExtended:
@@ -464,15 +469,17 @@ int Dis68HC05::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
                 ad += 2;
                 len += 2;
                 if (ra < 0x0100) { // add ">" to prevent direct addressing
-                    strcpy(parms,">");
+                    *parms++ = '>';
+                    *parms = 0;
                 }
-                RefStr(ra, parms+strlen(parms), lfref, refaddr);
+                RefStr(ra, parms, lfref, refaddr);
                 break;
 
             case iBSETBCLR: // bit,$dir
                 i = (i >> 1) & 7;   // bit
                 j = ReadByte(ad++); // dir
-                sprintf(parms, "%d,$%.2X", i, j);
+                RefStr2(j, s, lfref, refaddr);
+                sprintf(parms, "%d,%s", i, s);
                 len += 1;
                 break;
         }

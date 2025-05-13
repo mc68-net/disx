@@ -490,6 +490,12 @@ int Dis68HC05::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr
     // rip-stop checks
     if (opcode[0]) {
         switch (ReadByte(addr)) {
+            case 0x00: // BRSET 0,$00,rel
+                if ((ReadByte(addr+1) == 0x00) &&
+                    (ReadByte(addr+2) == 0x00)) {
+                    lfref |= RIPSTOP;
+                }
+                break;
             case 0xFF: // STX ,X
                 if ((ReadByte(addr+1) == 0xFF) &&
                     (ReadByte(addr+2) == 0xFF)) {

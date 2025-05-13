@@ -1941,6 +1941,7 @@ void DisScrn::do_trace(addr_t addr)
 
             // if CODEREF and target address not already >= mCode, add to stack
             if ((lfref & CODEREF) && !rom.AddrOutRange(addr)
+                                  && !(lfref & RIPSTOP)
                                   && rom.get_type(refaddr) < mCode) {
                 push_stack(refaddr);
             }

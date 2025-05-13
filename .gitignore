@@ -1,0 +1,6 @@
+#   These files are not generated from the main branch, but ignoring
+#   them here helps when switching from a build branch to this one
+#   to update the README.
+
+/*.o
+/disx

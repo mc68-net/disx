@@ -1,46 +1,70 @@
 disx multi-CPU diassembler
 ==========================
 
-- By [Bruce Tomlin] <bruce@xi6.com>.
-- Documentation: [`disx4.txt`].
+(For those wanting to skip the introduction, you may want to go straight to
+the [user manual][`USAGE.md`].)
 
-This is a multi-CPU disassembler for many major 8-bit and some 16-bit CPUs,
-with a full-screen text user interface.
+[disx], by [Bruce Tomlin], is an interactive, curses-based ([TUI]) tracing
+disassembler for Unix systems, including Linux and MacOS. (It may work on
+Windows via Cygwin or other means.)
 
-My first disassemblers were written in BASIC in the 80s, and were very
-stupid. They would just read the next byte and try to disassemble it, until
-the end of the input file. Any data would just become a complete mess.
+It supports almsot two dozen different (mostly 8-bit) CPUs and variants,
+including Z80, 6800, 6502, 6809, and so on. It writes a small binary
+control file that can be committed to version control, along with an ASCII
+symbol definition file and optional "equate" (for symbols with values
+outside of the disassembly range) file. It can generate both source code
+and listing files.
 
-Then I made a disassembler that would attempt to trace code references.
-While I was at it, I made it work with multiple different CPUs. That worked
-okay, but it had another problem. I had it use a control file to specify
-what every non-code byte was, manually. And usually I needed to run the
-disassembly again and again, to confirm that I got the last one right, and
-then to see the next bytes that needed to be manually specified.
+The original version of this disassembler and its documentation are
+available at [`xi6.com/projects/disx/`][disx] and [`disx4.txt`][disx4.txt]
+on that site.
 
-After many years of suffering through this, I wanted something that could
-let me make those changes easily, with immediate response, and without
-having to flip back and forth constantly between three windows. Eventually
-I decided that a text-based interface would be easier to deal with than one
-of the many windowing systems out there. So I made a simple screen kernel
-using ncurses, while I thought about what kind of data structures would
-most efficiently represent hints for disassembling code.
+This branch contains modifications; see the README on the [`main`] branch
+on this repo for information on the various branches and more on original
+sources.
 
-Once I started working on the real thing, it only took just over two months
-to get it working. Then I ported my old CPU disassemblers to it, and went
-looking for every bit of code that I could find to disassemble with it so
-that I could kick its tires, over and over again. Bugs were found and
-fixed, but most important, I found a good balance of keyboard commands to
-make it efficient to use.
 
-It supports a large set of CPUs, most of the common 8-bit ones, along with
-a few obscure ones, in different levels of quality.
+Introduction
+------------
 
-It compiles on Mac and Linux. Windows users can probably make it work with
-Cygwin or WSL, or manually create a command-line project that links with
-the ncurses library.
+disx is a _tracing_ disassembler, meaning that when it starts it assumes
+that all bytes are data and, when you ask it, it will simulate execution of
+the opcodes from a given address (going down both the "not taken" and
+"taken" paths of branches) to discover what parts of the binary are
+executable code. It assigns default label names (`lxxxx` for code
+referenced by branch instructions, `dxxxx` for data referenced by, e.g.,
+loading a register with an address) as it goes; if the user changes any one
+label name, it will be changed throughout the code.
 
-### Current CPUs supported
+The interface is much like any visual editor: you can use the arrow keys
+and other commands to change the current line, and enter commands that act
+on the current line (e.g., to change the label name for the current line,
+or change the label name for the target of the current instruction).
+
+disx is designed to make a decent disassembly that you can save as a `.asm`
+file and further tweak in a regular editor; it's not designed to produce a
+"perfect" disassembly that needs no further editing.
+
+There are a few useful things that disx does not currently do, including:
+- Tracking RAM references.
+- Dealing with split references (high half in one instruction, low half in
+  another).
+- Combining separate binary files. (If your code comes from multiple ROMs,
+  you will need to create a combined binary first.)
+- Handling multiple code segments with different address ranges.
+
+### Documentation
+
+- [`README.md`]: This file.
+- [`USAGE.md`]: The user manual.
+- [`CHANGELOG.md`]: Notes on each release.
+- [`DEVELOPMENT.md`]: Information for those looking at or modifying the code.
+
+### Supported CPUs
+
+disx is oriented mainly towards 8-bit CPUs, and these have the best
+support. It does, however, have some support for a few 16- and 32-bit CPUs
+as well.
 
 - Intel/Zilog 8080 Z8080 8085 8085U Z8085 Z80 Z180 GB GBZ80
 - MOS/WDC 6502 6502U 65C02 65SC02 65816 65C816
@@ -59,19 +83,45 @@ the ncurses library.
 - ARM (incomplete)
 - NEC D78C10 D78K0 D78K3
 
+For further information and the quality of support for each CPU, see
+[`DEVELOPMENT.md`]
 
-Further Information
--------------------
 
-The project home page can be found at <http://xi6.com/projects/disx/>.
-It includes ZIP files with several versions of the source code and links
-to the SVN repository. (This README is based on the project home page.)
+Building
+--------
 
-This Git repo was imported on 2025-04-20 from the original SVN repostory at
-<http://svn.xi6.com/svn/disx4/trunk/>. It includes all tags and branches.
+This uses a standard makefile, so use the "make" command to build it. It
+should work in a standard Unix, Linux or MacOS environment with C++
+developer tools installed. If this isn't sufficient information, then
+google for "how to use make."
+
+On some systems, if you have not previously used the compiler, "make" might
+have trouble finding it. Consult the documentation of your OS distribution
+for more information. (On Debian-based systems, including Ubuntu, `sudo apt
+install build-essential xutils-dev` should do the trick.)
+
+If you plan on modifying the code, you might want to use "make depend"
+first. This generates a file named ".depend" with make dependencies for the
+`.h` files. That way, when you change a common `.h` file, all files that
+use it will be automatically rebuilt. The "make depend" command will
+probably complain about missing standard includes; you should ignore these
+warnings.
+
+The developers have not tried to build this on Windows. It might work with
+either Cygwin or the Linux subsystem. At least one person has tried with
+Cygwin, but its system headers defined "addr_t" for some reason.
 
 
 
 <!-------------------------------------------------------------------->
-[Bruce Tomlin]: http://xi6.com/
+[`CHANGELOG.md`]: ./CHANGELOG.md
+[`DEVELOPMENT.md`]: ./DEVELOPMENT.md
+[`README.md`]: ./README.md
+[`USAGE.md`]: ./USAGE.md
 [`disx4.txt`]: ./disx4.txt
+
+[Bruce Tomlin]: http://xi6.com/
+[TUI]: https://en.wikipedia.org/wiki/Text-based_user_interface
+[`main`]: https://github.com/mc68-net/disx/tree/main
+[disx4.txt]: http://svn.xi6.com/svn/disx4/trunk/disx4.txt
+[disx]: http://xi6.com/projects/disx

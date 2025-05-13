@@ -2979,6 +2979,7 @@ void DisScrn::do_key(int key)
             break;
 
         case KEY_END:   // End
+        case 'G':       // XXX should also take _count to move to a given line
             key_end();
             print_screen();
             break;

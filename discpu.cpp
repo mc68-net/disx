@@ -264,8 +264,9 @@ int CPU::ReadLongLE(addr_t addr) const
 char *CPU::H2Str(uint8_t b, char *s) const
 {
     switch (_hexchr) {
+        case '>':
         case '$':
-            sprintf(s, "$%.2X", b);
+            sprintf(s, "%c%.2X", _hexchr, b);
             break;
         case 'O':
         case 'Q':
@@ -288,8 +289,9 @@ char *CPU::H2Str(uint8_t b, char *s) const
 char *CPU::H4Str(uint16_t w, char *s) const
 {
     switch (_hexchr) {
+        case '>':
         case '$':
-            sprintf(s, "$%.4X", w);
+            sprintf(s, "%c%.4X", _hexchr, w);
             break;
         case 'O':
         case 'Q':
@@ -312,8 +314,9 @@ char *CPU::H4Str(uint16_t w, char *s) const
 char *CPU::H6Str(uint32_t l, char *s) const
 {
     switch (_hexchr) {
+        case '>':
         case '$':
-            sprintf(s, "$%.6X", l);
+            sprintf(s, "%c%.6X", _hexchr, l);
             break;
         case 'O':
         case 'Q':

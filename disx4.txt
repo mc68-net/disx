@@ -305,16 +305,20 @@ Some diassemblers can use a few extra hints on what to do. There are two flag bi
 
 0,2 = combine LXI, 1,3 = don't combine LXI
 
-8048: The bank for long jumps is by default determined by tracing back in the code for SEL MB0/MB1 instructions, but sometimes this is wrong. You can use hints to force which bank to use.
+8048: The bank for long jumps is by default determined by tracing back in the code for SEL MB0/MB1 instructions, but sometimes this is wrong. You can use hints to force which bank to use. On NS405 there are four banks, so the hint value is added to the bank number.
 
 0 = automatic, 1 = current bank, 2 = SEL MB0 bank, 3 = SEL MB1 bank
+
+TMS9900: immediate values become a reference with a hint flag of 1 or 3
+
+0,2 = immediate values are not a reference, 1,3 = immediate values are a reference
 
 
 === LABELS ===
 
 Addresses can be overriden with custom labels. This lets you name things, or use labels from existing source code, and it lets you add address references for an external ROM.
 
-To add a label, use the ":L" or ":LABEL" command. If you specify a name, a label is added at the current address, otherwise a label is deleted at the current address. Labels are saved in a text file called "file.sym", which can be edited when not running the disassembler.
+To add a label, use the ":L" or ":LABEL" command. If you specify a name, a label is added at the current address, otherwise a label is deleted at the current address. Labels are saved in a text file called "file.sym", which can be edited when not running the disassembler. Labels are converted to uppercase on entry, but the .sym file can be edited afterward for mixed-case labels.
 
 There is also a text file called "file.equ", which is read-only to the disassembler. It contains a list of labels that can be outside the code file range. This can be used for a list of external variables or subroutines. This list is searched after the .sym labels. Each line should contain a hexadecimal number followed by a blank and a string. Any text after the string will be ignored and can be used for documentation. Any line that does not start with a hexadecimal digit will also be ignored.
 
@@ -322,7 +326,7 @@ NOTE: THIS FEATURE IS CURRENTLY EXPERIMENTAL AND UNDER DEVELOPMENT
 (but it works rather well for just a few hours of effort!)
 
 - to add labels outside the code range, use a .equ file
-- when using the :ASM or :LIST commands, labels outside the binary file do not get labels generated
+- when using the :ASM or :LIST commands, labels outside the binary file do not get EQU lines generated
 - there is no check for duplicate labels
 - labels are only generated in contexts where code addresses are used
 - zero-page addressing only uses labels on some CPUs
@@ -356,7 +360,7 @@ This is a rough estimation of the quality of each disassembler:
 4 = disassembled code has been regularly re-assembled and compared
 5 = it has been used a lot, but some sub-types might be less than perfect
 
-5  disz80.cpp    - heavy usage and re-assemblies, but does not support 8080 mnemonics
+5  disz80.cpp    - heavy usage and re-assemblies
 5  dis6502.cpp   - 6502 tested with many re-assemblies, 65816 works on a few samples
 5  dis6809.cpp   - heavy usage and re-assmblies, no 6309 support
 5  dis68HC11.cpp - tested with many re-assemblies, but few 6303 examples
@@ -373,6 +377,7 @@ This is a rough estimation of the quality of each disassembler:
 2  dispic.cpp    - sort of works, but better testing needed
 1  disarm.cpp    - still needs a lot of work, can suffer from split references
 3  disthumb.cpp  - needs work, and trouble dealing with odd code addresses (Thumb flag)
+2  dis9900.cpp   - seems to agree with existing disassemblies
 2  dis7810.cpp   - only tested on one code example
 1  dis78K0.cpp   - the code that I thought was 78K0 turned out to be 78K3, so no examples
 2  dis78K3.cpp   - only tested on one code example
@@ -499,6 +504,8 @@ New features:
 - add Signetics 2650 disassembler
 - add Motorola 68HC12 disassembler
 - add octal object code output to make PDP-11 look right
+- add TI 9900 disassembler
+- zero-page labels support for 68HC11, 6809, 6502, 68HC05, 2650
 
 Bugs fixed:
 - reset hint flags when changing instr type

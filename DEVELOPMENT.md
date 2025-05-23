@@ -22,7 +22,7 @@ level is coded as follows:
 - `dis6502.cpp`:   6502 tested with many re-assemblies, 65816 works on a few samples
 - `dis6809.cpp`:   Heavy usage and re-assmblies, no 6309 support.
 - `dis68HC11.cpp`: Tested with many re-assemblies, but few 6303 examples.
-- `dis68k.cpp`:    Heavy usage and re-assmblies.
+- `dis68k.cpp`:    Heavy usage and re-assmblies for 68000; 68020 works on a few samples.
 - `disz80.cpp`:    Heavy usage and re-assemblies, but does not support 8080 mnemonics.
 
 #### Level 4

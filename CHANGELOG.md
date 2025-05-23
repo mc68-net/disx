@@ -7,6 +7,7 @@ New features:
 - add support for NS405 CPU (8048 variant)
 - add Signetics 2650 disassembler
 - add Motorola 68HC12 disassembler
+- add initial 68020 support
 
 Bugs fixed:
 - reset hint flags when changing instr type

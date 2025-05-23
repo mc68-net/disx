@@ -28,7 +28,8 @@ re-sort these at startup, writing them when the `:w` command is executed.
   disassembly range.
 - _binfile_`.equ`: Symbol names and addresses for symbols outside the
   disassembly range. This is never created by disx, but is read. These
-  symbols are not displayed in generated assembly source and listing files.
+  symbols do not generate EQU definitions in assembly source and listing
+  files.
 - _binfile_`.cmt`: Comments.
 
 Caveats:
@@ -207,6 +208,10 @@ there was one, or otherwise remove the label from a line.
 See the "Invocation" section above for information on the `.sym` and `.equ`
 files in which labels are stored.
 
+Labels entered using `:l` etc. will always be converted to upper case, but
+lower-case found in the `.sym` file is preserved, so you can edit it
+afterwards to set the case as you see fit.
+
 #### Comment and Miscellaneous Commands
 
     l      Toggle a pre-instruction blank line before this code/data line.
@@ -349,12 +354,18 @@ you will want to override this.
 
 The bank for long jumps is by default determined by tracing back in the
 code for `SEL MB0/MB1` instructions, but sometimes this is wrong. You can
-use hints to force which bank to use.
+use hints to force which bank to use. On NS405 there are four banks, so the
+hint value is added to the bank number.
 
     0   automatic
     1   current bank
     2   SEL MB0 bank
     3   SEL MB1 bank
+
+#### TMS9900
+
+    0,2 immediate values are not a reference
+    1,3 immediate values become a reference
 
 
 Miscellaneous Stuff

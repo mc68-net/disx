@@ -1,6 +1,13 @@
 disx CHANGELOG
 ==============
 
+#### trunk
+
+- Added: octal object code output to make PDP-11 look right
+- Added: TI 9900 disassembler
+- Added: zero-page labels support for 68HC11, 6809, 6502, 68HC05, 2650
+- Fixed: PIC 14-bit was completely wrong
+
 #### 4.4.0 - 2025-??-??
 
 New features:

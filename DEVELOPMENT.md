@@ -24,6 +24,8 @@ level is coded as follows:
 - `dis68HC11.cpp`: Tested with many re-assemblies, but few 6303 examples.
 - `dis68k.cpp`:    Heavy usage and re-assmblies for 68000; 68020 works on a few samples.
 - `disz80.cpp`:    Heavy usage and re-assemblies, but does not support 8080 mnemonics.
+- `dis68k.cpp`:    Heavy usage and re-assmblies.
+- `disz80.cpp`:    Heavy usage and re-assemblies.
 
 #### Level 4
 
@@ -31,6 +33,7 @@ level is coded as follows:
 
 #### Level 3
 
+- `dis68HC05.cpp`: Few examples to test it on.
 - `dis8008.cpp`:   Tested on a few re-assemblies.
 - `dis8048.cpp`:   Tested with re-assemblies, but suffers from guessing bank selects.
 - `disthumb.cpp`:  Needs work, and trouble dealing with odd code addresses (Thumb flag).
@@ -41,13 +44,13 @@ level is coded as follows:
 - `dis1802.cpp`:   Sort of works, but few samples and it suffers from split references.
 - `dis2650.cpp`:   Seems to work okay on a few samples.
 - `dis4004.cpp`:   Tested on the Busicom calculator ROM.
-- `dis68HC05.cpp`: Few examples to test it on.
 - `dis68HC12.cpp`: Tested on an example and an "all opcodes" binary.
 - `dis7810.cpp`:   Only tested on one code example.
 - `dis78K3.cpp`:   Only tested on one code example.
 - `dis8086.cpp`:   Very minimal, only useful for Small model code without segments.
 - `disf8.cpp`:     Sort of works, but not enough examples.
-- `dispdp11.cpp`:  Sort of works, but not enough examples, and it looks weird in hexadecimal.
+- `dis9900.cpp`:   Seems to agree with existing disassemblies.
+- `dispdp11.cpp`:  Sort of works, but not enough examples.
 - `dispic.cpp`:    Sort of works, but better testing needed.
 
 #### Level 1

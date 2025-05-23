@@ -29,6 +29,22 @@ supports, see [the web site][disx] and [the documentation][disx4.txt].
   This brings the documentation to a state where it's displayed nicely by
   GitHub/GitLab/etc. It's also used as the base for feature fork branches.
 
+### Updating `trunk`
+
+For details of how git-svn works and conversion/import procedures, see
+[sedoc:git/svn].
+
+To update the `trunk` branch with the latest commits from the SVN repo,
+check out this `main` branch and run the `update` script. This will set up
+things and, due to the way that `git svn rebase` works, switch you to the
+`trunk` branch, which does leave you in a convenient position to examine
+and push the new commits.
+
+`update` does not unfortunately yet update release tags, but that's a
+little complex, requiring either `svn2git` (which has its own problems
+related to branch naming) or doing some of the extra things that `svn2git`
+does but `git svn` does not directly do.
+
 
 
 <!-------------------------------------------------------------------->
@@ -36,6 +52,7 @@ supports, see [the web site][disx] and [the documentation][disx4.txt].
 [TUI]: https://en.wikipedia.org/wiki/Text-based_user_interface
 [disx4.txt]: http://svn.xi6.com/svn/disx4/trunk/disx4.txt
 [disx]: http://xi6.com/projects/disx
+[sedoc:git/svn]: https://github.com/0cjs/sedoc/blob/master/git/svn.md
 [svn repo]: http://svn.xi6.com/svn/disx4/
 
 [`doc-markdown`]: https://github.com/mc68-net/disx/tree/doc-markdown

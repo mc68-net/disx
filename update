@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+cd "$(dirname "$0")"
+
+#   Since we'll be switching branches, the authors file has to be copied
+#   outside the repo.
+cp authors ../disx.svn.authors
+git config --local svn.authorsfile ../disx.svn.authors
+
+#   Set up svn in this particular clone of the repo and ensure we're
+#   up to date.
+git svn init http://svn.xi6.com/svn/disx4/ --stdlayout
+git svn fetch
+
+git checkout trunk
+git svn rebase
+echo; echo "Warning: you are left on branch 'trunk'"
+git status -bs

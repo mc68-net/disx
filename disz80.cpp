@@ -1809,7 +1809,12 @@ int DisZ80::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
                 ad += 2;
                 len += 2;
 
-                RefStr(ra, p, lfref, refaddr);
+                if (!(lfref & CODEREF) && rom.get_hint(addr) & 1) {
+                    // no reference if hint is odd
+                    H4Str(ra, p);
+                } else {
+                    RefStr(ra, p, lfref, refaddr);
+                }
                 p += strlen(p);
                 break;
 

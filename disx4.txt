@@ -297,6 +297,8 @@ Z-80:
 
 Some diassemblers can use a few extra hints on what to do. There are two flag bits for each address, which can be one of four combinations. The meaning of these is different for each disassembler.
 
+Z80: 16-bit references are disabled with a hint of 1 or 3.
+
 65816: Some instructions change length depending on the run-time value of two processor status flags. These have been assigned to set the "LONGA" (immediate loads for the accumulator are 16 bits) and "LONGI" (immediate loads for the index registers are 16 bits) flags.
 
 0 = none, 1 = LONGI, 2 = LONGA, 3 = LONGI + LONGA

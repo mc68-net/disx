@@ -450,8 +450,31 @@ FractEnable	EQU $0BF4 ; byte  enables fractional widths if not zero
 
 ; A5 offset of qd globals:
 ;  $0010	finder information handle
-; -$00C6  FF3A	fmOutput fontData;	,26	EQU $FFFFFF36 ; FMOutput record; -$00AC  FF54	fmOutPtr fontPtr;	,4	EQU $FFFFFF50 ; ptr to fontData; -$00A8  FF58	fixed fontAdj;		,4	EQU $FFFFFF54 ; Fixed Point; -$00A4  FF5C	point patAlign;		,4	EQU $FFFFFF58 ; Point; -$00A0  FF60	int polyMax;		,2	EQU $FFFFFF5C ; INTEGER; -$009E  FF62	polyHandle thePoly;	,4	EQU $FFFFFF5E ; POLYHANDLE; -$009A  FF66	int playIndex;		,2	EQU $FFFFFF62 ; INTEGER; -$0098  FF68	picHandle playPic;	,4	EQU $FFFFFF64 ; Long; -$0094  FF6C	int rgnMax;		,2	EQU $FFFFFF68 ; INTEGER; -$0092  FF6E	int rgnIndex;		,2	EQU $FFFFFF6A ; INTEGER; -$0090  FF70	qdHandle rgnBuf;	,4	EQU $FFFFFF6C ; PointsHandle; -$008C  FF74	region wideData;	,10	EQU $FFFFFF70 ; Fake Region; -$0082  FF7E	rgnPtr wideMaster;	,4	EQU $FFFFFF7A ; RgnPtr; -$007E  FF82	rgnHandle wideOpen;	,4	EQU $FFFFFF7E ; RgnHandle; -$007A  FF86	long randSeed;		,4	EQU $FFFFFF82 ; [long]; -$0068  FF98	bitMap screenBits;	,14	EQU $FFFFFF86 ; [BitMap]; -$0068  FF98	cursor arrow;		,68	EQU $FFFFFF94 ; [Cursor]; -$002C  FFD4	pattern dkGray;		,8	EQU $FFFFFFD8 ; [Pattern]; -$0024  FFDC	pattern ltGray;		,8	EQU $FFFFFFE0 ; [Pattern]; -$001C  FFE4	pattern gray;		,8	EQU $FFFFFFE8 ; [Pattern]; -$0014  FFEC	pattern black;		,8	EQU $FFFFFFF0 ; [Pattern]; -$000C  FFF4	pattern white;		,8	EQU $FFFFFFF8 ; [Pattern]; -$0004  FFFC	grafptr thePort;	,4	EQU $0 ; [GrafPtr]
-; -$0000  0000	pointer to qd globals, set to -4(A5) by InitGraf(qd.thePort); GrafPort structure
+; -$00C6  FF3A	fmOutput fontData;	,26	EQU $FFFFFF36 ; FMOutput record
+; -$00AC  FF54	fmOutPtr fontPtr;	,4	EQU $FFFFFF50 ; ptr to fontData
+; -$00A8  FF58	fixed fontAdj;		,4	EQU $FFFFFF54 ; Fixed Point
+; -$00A4  FF5C	point patAlign;		,4	EQU $FFFFFF58 ; Point
+; -$00A0  FF60	int polyMax;		,2	EQU $FFFFFF5C ; INTEGER
+; -$009E  FF62	polyHandle thePoly;	,4	EQU $FFFFFF5E ; POLYHANDLE
+; -$009A  FF66	int playIndex;		,2	EQU $FFFFFF62 ; INTEGER
+; -$0098  FF68	picHandle playPic;	,4	EQU $FFFFFF64 ; Long
+; -$0094  FF6C	int rgnMax;		,2	EQU $FFFFFF68 ; INTEGER
+; -$0092  FF6E	int rgnIndex;		,2	EQU $FFFFFF6A ; INTEGER
+; -$0090  FF70	qdHandle rgnBuf;	,4	EQU $FFFFFF6C ; PointsHandle
+; -$008C  FF74	region wideData;	,10	EQU $FFFFFF70 ; Fake Region
+; -$0082  FF7E	rgnPtr wideMaster;	,4	EQU $FFFFFF7A ; RgnPtr
+; -$007E  FF82	rgnHandle wideOpen;	,4	EQU $FFFFFF7E ; RgnHandle
+; -$007A  FF86	long randSeed;		,4	EQU $FFFFFF82 ; [long]
+; -$0068  FF98	bitMap screenBits;	,14	EQU $FFFFFF86 ; [BitMap]
+; -$0068  FF98	cursor arrow;		,68	EQU $FFFFFF94 ; [Cursor]
+; -$002C  FFD4	pattern dkGray;		,8	EQU $FFFFFFD8 ; [Pattern]
+; -$0024  FFDC	pattern ltGray;		,8	EQU $FFFFFFE0 ; [Pattern]
+; -$001C  FFE4	pattern gray;		,8	EQU $FFFFFFE8 ; [Pattern]
+; -$0014  FFEC	pattern black;		,8	EQU $FFFFFFF0 ; [Pattern]
+; -$000C  FFF4	pattern white;		,8	EQU $FFFFFFF8 ; [Pattern]
+; -$0004  FFFC	grafptr thePort;	,4	EQU $0 ; [GrafPtr]
+; -$0000  0000	pointer to qd globals, set to -4(A5) by InitGraf(qd.thePort)
+; GrafPort structure
 ; 00      ; device:     Integer;    {device-specific information}
 ; 02      ; portBits:   BitMap;     {bitmap}
 ; 10      ; portBounds: Rect;
@@ -1414,24 +1437,4 @@ _MacsBugStr	macro
 		dc.w 0xABFF
 		endm
 ; ==============
- if 0
 
-	macro
-		dc.w 
-		endm
-	macro
-		dc.w 
-		endm
-	macro
-		dc.w 
-		endm
-	macro
-		dc.w 
-		endm
-	macro
-		dc.w 
-		endm
-	macro
-		dc.w 
-		endm
- endif

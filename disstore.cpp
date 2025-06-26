@@ -243,6 +243,7 @@ void DisStore::set_instr(addr_t addr, int len, int type, bool lfflag)
     }
 
     // set first byte to type and lfflag
+    clear_attr_flag(addr, ATTR_CONT);
     clear_attr_flag(addr, ATTR_LF1);
     if (lfflag) {
         set_attr_flag(addr, ATTR_LF1);

@@ -542,6 +542,7 @@ New features:
 - added hint to disable references for DW, DRW, DL, DRL
 - support for wide-word architectures
 - added Data General Nova disassembler
+- added CP1610 disassembler
 
 Bugs fixed:
 - reset hint flags when changing instr type

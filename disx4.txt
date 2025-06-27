@@ -411,12 +411,15 @@ This is a rough estimation of the quality of each disassembler:
 1  disarm.cpp    - still needs a lot of work, can suffer from split references
 3  disthumb.cpp  - needs work, and trouble dealing with odd code addresses (Thumb flag)
 2  dis9900.cpp   - seems to agree with existing disassemblies
+2  disnova.cpp   - seems to work okay on a few samples
+2  dis1610.cpp   - seems to work okay on a few samples
 2  dis7810.cpp   - only tested on one code example
 1  dis78K0.cpp   - the code that I thought was 78K0 turned out to be 78K3, so no examples
 2  dis78K3.cpp   - only tested on one code example
 2  dis8086.cpp   - very minimal, only useful for Small model code without segments
 2  dispdp11.cpp  - sort of works, but not enough examples
 2  dis2650.cpp   - seems to work okay on a few samples
+2  disimp16.cpp  - seems to work okay on a few samples
 
 === Q AND A ===
 
@@ -543,6 +546,7 @@ New features:
 - support for wide-word architectures
 - added Data General Nova disassembler
 - added CP1610 disassembler
+- added IMP-16 disassembler
 
 Bugs fixed:
 - reset hint flags when changing instr type

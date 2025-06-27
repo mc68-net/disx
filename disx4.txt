@@ -541,6 +541,7 @@ New features:
 - zero-page labels support for 68HC11, 6809, 6502, 68HC05, 2650
 - added hint to disable references for DW, DRW, DL, DRL
 - support for wide-word architectures
+- added Data General Nova disassembler
 
 Bugs fixed:
 - reset hint flags when changing instr type

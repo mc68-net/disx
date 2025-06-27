@@ -613,6 +613,7 @@ void DisDefault::word_dis_line(addr_t addr, char *opcode, char *parms, int &lfre
 {
     int len = rom.get_len(addr) / 2;
     bool w1 = rom.get_type(addr) == mWord1;
+    int hint = rom.get_hint(addr);
 
     char *p = parms;
     strcpy(opcode, _dwopcd);
@@ -621,7 +622,14 @@ void DisDefault::word_dis_line(addr_t addr, char *opcode, char *parms, int &lfre
         w++; // mWord1 reference address is w + 1
     }
     addr += 2;
-    RefStr4(w, p, lfref, refaddr);
+
+    // disable reference if odd hint
+    if (hint & 1) {
+        H4Str(w, p);
+    } else {
+        RefStr4(w, p, lfref, refaddr);
+    }
+
     p += strlen(p);
     if (w1) {
         strcat(p, "-1");
@@ -648,6 +656,7 @@ void DisDefault::word_dis_line(addr_t addr, char *opcode, char *parms, int &lfre
 void DisDefault::rword_dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr) const
 {
     int len = rom.get_len(addr) / 2;
+    int hint = rom.get_hint(addr);
 
     char *p = parms;
     // use DW reverse opcode if specified
@@ -659,9 +668,15 @@ void DisDefault::rword_dis_line(addr_t addr, char *opcode, char *parms, int &lfr
     }
     int w = ReadRWord(addr);
     addr += 2;
-    RefStr4(w, p, lfref, refaddr);
-    p += strlen(p);
 
+    // disable reference if odd hint
+    if (hint & 1) {
+        H4Str(w, p);
+    } else {
+        RefStr4(w, p, lfref, refaddr);
+    }
+
+    p += strlen(p);
     for (int i = 0; i < len - 1; i++) {
         int w = ReadRWord(addr);
         addr += 2;
@@ -682,14 +697,21 @@ void DisDefault::rword_dis_line(addr_t addr, char *opcode, char *parms, int &lfr
 void DisDefault::long_dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr) const
 {
     int len = rom.get_len(addr) / 4;
+    int hint = rom.get_hint(addr);
 
     char *p = parms;
     strcpy(opcode, _dlopcd);
     uint32_t w = ReadLong(addr);
     addr += 4;
-    RefStr8(w, p, lfref, refaddr);
-    p += strlen(p);
 
+    // disable reference if odd hint
+    if (hint & 1) {
+        H8Str(w, p);
+    } else {
+        RefStr8(w, p, lfref, refaddr);
+    }
+
+    p += strlen(p);
     for (int i = 0; i < len - 1; i++) {
         uint32_t l = ReadLong(addr);
         addr += 4;
@@ -710,15 +732,22 @@ void DisDefault::long_dis_line(addr_t addr, char *opcode, char *parms, int &lfre
 void DisDefault::rlong_dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t &refaddr) const
 {
     int len = rom.get_len(addr) / 4;
+    int hint = rom.get_hint(addr);
 
     char *p = parms;
     strcpy(opcode, _dlopcd);
     strcat(opcode, "*");
     uint32_t w = ReadRLong(addr);
     addr += 4;
-    RefStr8(w, p, lfref, refaddr);
-    p += strlen(p);
 
+    // disable reference if odd hint
+    if (hint & 1) {
+        H8Str(w, p);
+    } else {
+        RefStr8(w, p, lfref, refaddr);
+    }
+
+    p += strlen(p);
     for (int i = 0; i < len - 1; i++) {
         uint32_t l = ReadRLong(addr);
         addr += 4;

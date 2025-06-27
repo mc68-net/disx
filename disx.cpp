@@ -38,9 +38,9 @@ void usage(void)
 //  printf("    --             end of options\n");
     printf("    -c cpu         select default CPU type\n");
     printf("    -c ?           show list of supported CPU types\n");
-    printf("    -b xxxx        hexidecimal base address\n");
-    printf("    -s xxxx        hexidecimal size of binary data\n");
-    printf("    -o xxxx        hexidecimal offset to start of data in file\n");
+    printf("    -b xxxx        base address\n");
+    printf("    -s xxxx        size of binary data\n");
+    printf("    -o xxxx        offset to start of data in file\n");
     printf("    -a             create binfile.asm and exit\n");
     printf("    -l             create binfile.lst and exit\n");
     printf("    -!             don't load binfile.ctl\n");
@@ -52,6 +52,7 @@ void usage(void)
 void getopts(int argc, char * const argv[])
 {
     int ch;
+    int scale = defCpu->word_size();
 
     while ((ch = getopt(argc, argv, "c:b:s:o:!al?")) != -1) {
         switch (ch) {
@@ -64,6 +65,7 @@ void getopts(int argc, char * const argv[])
                     CPU *cpu = CPU::get_cpu(optarg);
                     if (cpu) {
                         cpu->set_cur_cpu();
+                        scale = defCpu->word_size();
                     } else {
                         printf("Invalid CPU type specified\n");
                         CPU::show_list();
@@ -74,26 +76,26 @@ void getopts(int argc, char * const argv[])
                 break;
 
             case 'b': // base address
-                if (!HexValid(optarg)) {
+                if (!HexOctValid(optarg)) {
                     usage();
                 }
-                base = HexVal(optarg);
+                base = HexOctVal(optarg) * scale;
                 force |= DisSave::FORCE_BASE;
                 break;
 
             case 's': // size of image
-                if (!HexValid(optarg)) {
+                if (!HexOctValid(optarg)) {
                     usage();
                 }
-                size = HexVal(optarg);
+                size = HexOctVal(optarg) * scale;
                 force |= DisSave::FORCE_SIZE;
                 break;
 
             case 'o': // file offset
-                if (!HexValid(optarg)) {
+                if (!HexOctValid(optarg)) {
                     usage();
                 }
-                ofs = HexVal(optarg);
+                ofs = HexOctVal(optarg) * scale;
                 force |= DisSave::FORCE_OFS;
                 break;
 

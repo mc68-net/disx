@@ -191,7 +191,7 @@ void DisLine::get_text(const addrline_t addr, char *s) const
             if (ln-- == 0) {
                 // found the right line
                 char parms[16];
-                sprintf(parms, "%c-%d", defCpu->_curpc, len - ofs);
+                sprintf(parms, "%c-%d", defCpu->_curpc, (len - ofs) / defCpu->word_size());
                 build_line(ad, s, "EQU", parms, ofs, /*flags=*/ BL_NOCOMMENT);
                 return;
             }
@@ -376,6 +376,7 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
                          const char* parms, int ofs, int flags) const
 {
     char label[16] = {0};
+    int scale = defCpu->word_size();
 
     // get actual instruction length using attr flags
     int len = rom.get_len(addr);
@@ -390,12 +391,12 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
         // add address
         if (defCpu->_addrwid == ADDR_16) {
             if (defCpu->_radix & RAD_OCT) {
-                sprintf(p, "%.6o:", (unsigned) addr + ofs);
+                sprintf(p, "%.6o:", (unsigned) (addr + ofs) / scale);
             } else {
-                sprintf(p, "%.4X:", (unsigned) addr + ofs);
+                sprintf(p, "%.4X:", (unsigned) (addr + ofs) / scale);
             }
         } else {
-            sprintf(p, "%.6X:", (unsigned) addr + ofs);
+            sprintf(p, "%.6X:", (unsigned) (addr + ofs) / scale);
         }
         p += strlen(p);
 
@@ -439,6 +440,8 @@ void DisLine::build_line(addr_t addr, char *s, const char *opcode,
     } else
 
     if (line_cols & (1 << T_LABEL)) {
+        // note: addr is the byte address
+
         // add label of current address
         if (rom.get_attr(addr + ofs) & ATTR_LMASK) {
             generic.make_label(addr + ofs, label);
@@ -514,8 +517,6 @@ void DisLine::dis_org(char *s) const
 // returns 0 if nothing done
 // returns 1 if valid opcode
 // returns 2 if refaddr is a new code reference that should be traced
-// returns 5 or 6 if lfflag (end of code stream)
-// ***FIXME: most of the above is silly since lfref is being returned
 
 int DisLine::make_code(addr_t addr, int &lfref, addr_t &refaddr)
 {
@@ -568,7 +569,7 @@ int DisLine::make_code(addr_t addr, int &lfref, addr_t &refaddr)
             }
 
             // set data or code reference
-            if (lfref & CODEREF) {
+            if ((lfref & CODEREF) && !(lfref & INDMASK)) {
                 rom.clear_attr_flag(refaddr, ATTR_LDATA);
                 rom.set_attr_flag(refaddr, ATTR_LCODE);
                 // return code reference status for tracer

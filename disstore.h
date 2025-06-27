@@ -37,7 +37,18 @@ enum LfRef {
     REFFLAG = 0x02,     // this instruction has an address reference
     CODEREF = 0x04,     // the reference is also a code reference
     RIPSTOP = 0x08,     // this instruction is probably bogus
+    INDMASK = 0x70,     // indirect reference flags
+    INDNONE = 0x00,     // not an indirect reference
+    INDUNK  = 0x10,     // unknown indirect reference
+    INDWBE  = 0x40,     // 16-bit big-endian reference
+    INDWLE  = 0x42,     // (not implemented yet)
+    INDLBE  = 0x60,     // (not implemented yet)
+    INDLLE  = 0x62,     // (not implemented yet)
+    SKPMASK = 0x0700,   // 0-6 bytes of skip + 1
+    SKPSHFT = 8,
 };
+// number of bytes to skip after this instruction
+#define SKPBYTES(n) ((n+1)<<SKPSHFT)
 
 
 // attributes for _attr

@@ -66,12 +66,14 @@ Usage:
 Options:
     -c cpu         select default CPU type
     -c ?           show list of supported CPU types
-    -b xxxx        hexidecimal base address
-    -s xxxx        hexidecimal size of binary data
-    -o xxxx        hexidecimal offset to start of data in file
+    -b xxxx        base address
+    -s xxxx        size of binary data
+    -o xxxx        offset to start of data in file
     -a             create binfile.asm and exit
     -l             create binfile.lst and exit
     -!             don't load binfile.ctl
+
+The addresses for -b, -s, and -o default to hexadecimal unless the selected CPU prefers octal. A prefix letter of "H" or "O" will force hexadecimal or octal. They are also scaled for wide architectures.
 
 If started up with no parameters, it will show an empty file, and the selected CPU type will be undefined. If "binfile.ctl" is loaded, its saved -b, -s, and -o parameters are used unless overridden.
 
@@ -297,6 +299,8 @@ Z-80:
 
 Some diassemblers can use a few extra hints on what to do. There are two flag bits for each address, which can be one of four combinations. The meaning of these is different for each disassembler.
 
+All: DW, DRW, DL, DRL references are disabled with a hint of 1 or 3.
+
 Z80: 16-bit references are disabled with a hint of 1 or 3.
 
 65816: Some instructions change length depending on the run-time value of two processor status flags. These have been assigned to set the "LONGA" (immediate loads for the accumulator are 16 bits) and "LONGI" (immediate loads for the index registers are 16 bits) flags.
@@ -335,6 +339,35 @@ NOTE: THIS FEATURE IS CURRENTLY EXPERIMENTAL AND UNDER DEVELOPMENT
 - labels can not be attached to "EQU $-1" lines
 
 
+== WIDE ARCHITECTURES ==
+
+Most modern architectures are based on the concept of an 8-bit byte as the smallest addressable unit. The only signifcant exception is older PIC processors. This causes a problem when trying to support as many architectures as possible in a single code base. Some sort of compromises need to be made. But there are quite a few legacy architectures where the instruction word is 10-16 bits long.
+
+Wide architecture support is going to require something or another to be weird, so choices have been made to do things in the most "sensible" way. You can to do screwy things to break it. Don't do screwy things.
+
+* each word is internally represented as multiple bytes
+This means that scaling must be done between 8-bit addresses in the raw binary, and 16-bit word addresses in the target architecture. The user should see 16-bit addresses whenever possible.
+
+* labels should be displayed in the target word size
+When PIC was the only such architcture, labels were based on the byte addresses of the data. This wasn't much of a problem because PIC had separate code and data spaces, so labels were only referenced by jumps and branches.
+The way chosen to handle byte vs word addresses in labels is to look at the default CPU, and generate labels using its instruction width. They can also be displayed in the preferred radix (hex vs octal) of the default CPU.
+
+* code address shows a word address
+This is for the same reasons as above. Word-based disasssemblers can now force a word display of binary object code. In particular, displaying things as bytes shows the same code address multiple times. "EQU *-1" lines will also lose the low bit of the byte address. When displaying raw bytes, the same address will be shown for both the even and odd byte.
+
+* command line options (and the ":load" command) use the radix and scale of the default CPU
+You may need to use the :defcpu command before using :load if the width is different.
+
+* binary file endian
+This is mostly an issue of how the code is stored in a byte-addressed file, but 16-bit binary code can be stored in either endian order. PDP-11 is little-endian, but it's also a byte architecture, so it is not relevant here. However, existing .hex files for PIC that I have found were all in little-endian format. For now, the default assumption is that wide binaries except for PIC will be big-endian.
+
+* .sym files
+Addresses in .sym files use the raw byte address.
+
+* .equ files
+Addresses in .equ files use the scaled word address, because they are user-visible.
+
+
 === MISCELLANEOUS STUFF ===
 
 * If the .bin file has been moved to a different directory, the path saved in the .ctl file will not match. There will still be an attempt to load the .ctl file from the same directory as the .bin file.
@@ -342,8 +375,6 @@ NOTE: THIS FEATURE IS CURRENTLY EXPERIMENTAL AND UNDER DEVELOPMENT
 * The 8048 disassembler has to guess the SEL MB0/MB1 flag for the JMP and CALL instruction bank address. This is done by searching backwards as long as there's contiguous 8048 code. If none is found, it defaults to the bank at the current address. It is possible for a called subroutine to change the bank, and further calls/jumps after the call will have to be manually overridden with hints.
 
 * Not all of the disassembler cores have been thoroughly tested. Some (ARM and PIC) were never quite finished.
-
-* The PIC disassembler creates label names using the byte address rather than the word address.
 
 * The PIC disassembler requires the binary be in little-endian format (low instruction byte first).
 
@@ -508,11 +539,14 @@ New features:
 - add octal object code output to make PDP-11 look right
 - add TI 9900 disassembler
 - zero-page labels support for 68HC11, 6809, 6502, 68HC05, 2650
+- added hint to disable references for DW, DRW, DL, DRL
+- support for wide-word architectures
 
 Bugs fixed:
 - reset hint flags when changing instr type
 - Z80: fix Intel 8080 opcode table
 - fixed pointer use-after-free bug in comments/labels code
 - PIC 14-bit was completely wrong
+- tracing code already marked as data did not clear the continuation flag
 
 ================

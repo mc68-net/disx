@@ -375,10 +375,15 @@ bool CPU::ref_label(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 
     s[0] = 0;
 
-    if (rom._base <= addr && addr <= rom.get_end() && addr != 0) {
+    // note: addr is word address, a is byte address
+    int a = addr * defCpu->word_size();
+
+    if (rom._base <= a && a <= rom.get_end() && a != 0) {
         lfref |= REFFLAG;
-        make_label(addr, s);
-        refaddr = addr;
+        // make_label needs the byte address
+        make_label(a, s);
+        // label needs to be set at byte address
+        refaddr = a;
         // note that if the label wasn't actually flagged as a label,
         // make_label will leave the string empty, but refaddr will still be set
     }
@@ -469,12 +474,32 @@ char *CPU::RefStr(addr_t addr, char *s, int &lfref, addr_t &refaddr) const
 
 
 // =====================================================
+int CPU::word_size() const
+{
+    switch (_wordsize) {
+        default:
+        case WS_8:      // 8 bits
+            break;
+        case WS_16BE:   // 16 bits big-endian
+        case WS_16LE:   // 16 bits little-endian
+            return 2;
+    }
+
+    return 1;
+}
+
+
+// =====================================================
 void CPU::make_label(addr_t addr, char *s) const
 {
     s[0] = 0;
     char c = 0;
 
+    // note: addr is the byte address, a is the scaled address
+    addr_t a = addr / defCpu->word_size();
+
     // check if external symbol defined at this address
+    // .sym labels are byte addresses
     const char *str;
     if ((str = sym.get_sym(addr))) {
         strcpy(s, str);
@@ -504,11 +529,15 @@ void CPU::make_label(addr_t addr, char *s) const
     switch (defCpu->_addrwid) {
         default:
         case ADDR_16:
-            sprintf(s, "%c%.4X", c, (unsigned) addr);
+            if (defCpu->_radix & RAD_OCT) {
+                sprintf(s, "%c%.6o", c, (unsigned) a);
+            } else {
+                sprintf(s, "%c%.4X", c, (unsigned) a);
+            }
             break;
         case ADDR_24:
         case ADDR_32:
-            sprintf(s, "%c%.6X", c, (unsigned) addr);
+            sprintf(s, "%c%.6X", c, (unsigned) a);
             break;
     }
 }
@@ -862,11 +891,12 @@ void DisDefault::ofs_dis_line(addr_t addr, char *opcode, char *parms, int &lfref
 void DisDefault::hex_dis_line(addr_t addr, char *opcode, char *parms) const
 {
     int len = rom.get_len(addr);
+    int scale = defCpu->word_size();
 
     char *p = parms;
     strcpy(opcode, "HEX");
     for (int i = 0; i < len; i++) {
-        if (i) {
+        if (i && ((scale == 1) || !(addr & 1))) {
             p = stpcpy(p, " ");
         }
 

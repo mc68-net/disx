@@ -156,8 +156,12 @@ int GetWord(char *&s, char *word);     	// get a word from s, and make it upper-
 int GetString(char *&s, char *word);    // get a string optionally delimited by quotes
 int ishex(char c);
 int HexVal(const char *hexStr);         // get value of a hex string
-uint32_t DecVal(const char *decStr);         // get value of a decimal string
+int OctVal(const char *octStr);         // get value of an octal string
+int HexOctVal(const char *hexStr);      // get value of a hex or octal string
+uint32_t DecVal(const char *decStr);    // get value of a decimal string
 bool HexValid(const char *hexStr);      // verify that a hex string is valid
+bool OctValid(const char *octStr);      // verify that an octal string is valid
+bool HexOctValid(const char *hexStr);   // verify that a hex or octal string is valid
 const char *rem_blank(char *s);         // remove doubled blanks from s
 
 

@@ -33,6 +33,11 @@ enum {
     RAD_HEX16LE = RAD_HEX + RAD_16 + RAD_LE, // 16-bit hex little-endian
     RAD_OCT16BE = RAD_OCT + RAD_16,          // 16-bit octal big-endian
     RAD_OCT16LE = RAD_OCT + RAD_16 + RAD_LE, // 16-bit octal little-endian
+
+    // _wordsize: addressed word size for a CPU
+    WS_8        = 0,            // 8-bits (default)
+    WS_16BE,                    // 9-16 bits, high bits first
+    WS_16LE,                    // 9-16 bits, low bits first
 };
 
 class CPU {
@@ -61,6 +66,7 @@ public:
     uint8_t _addrwid;     // preferred address width, =4 for most 8-bit, =6 for 68000/10
     bool    _usefcc;      // use Motorola FCC pseudo-op
     uint8_t _radix;       // display radix (default 8-bit hex)
+    uint8_t _wordsize;    // word size for >8 bits, scales generated label addresses
 
 public:
     // disassemble an instruction and return the length in bytes, returns len or <=0 if invalid
@@ -81,6 +87,9 @@ public:
 
     static void set_def_cpu(CPU *cpu);
     void set_def_cpu();
+
+    // returns the scale factor for word architectures
+    int word_size() const;
 
 // -----------------------------------------------------
 

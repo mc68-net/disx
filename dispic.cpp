@@ -70,6 +70,8 @@ DisPIC::DisPIC(const char *name, int subtype, int endian, int addrwid,
     _endian  = endian;
     _hexchr  = hexChr;
     _addrwid = addrwid;
+    _radix   = RAD_HEX16LE;
+    _wordsize = WS_16LE;
 
     add_cpu();
 }

@@ -859,6 +859,7 @@ void DisScrn::do_cmd_load(char *p)
     addr_t base = 0;
     size_t size = 0;
     int force = 0;
+    int scale = defCpu->word_size();
 
     int token = GetWord(p, word);
     while (token && !_err[0]) {
@@ -866,20 +867,20 @@ void DisScrn::do_cmd_load(char *p)
             force |= save.FORCE_FNAME;
         } else {
             // make sure parameter is hexadecimal
-            if (!HexValid(word+1)) {
+            if (!HexOctValid(word+1)) {
                 error("invalid hex parameter");
             } else
             switch (tolower(word[0])) {
                 case 'b':
-                    base = HexVal(word+1);
+                    base = HexOctVal(word+1) * scale;
                     force |= save.FORCE_BASE;
                     break;
                 case 's':
-                    size = HexVal(word+1);
+                    size = HexOctVal(word+1) * scale;
                     force |= save.FORCE_SIZE;
                     break;
                 case 'o':
-                    ofs  = HexVal(word+1);
+                    ofs  = HexOctVal(word+1) * scale;
                     force |= save.FORCE_OFS;
                     break;
                 default:
@@ -950,7 +951,7 @@ void DisScrn::do_cmd_go(char *p)
 {
     char word[256];
     if (GetWord(p, word)) {
-        int addr = HexVal(word);
+        int addr = HexOctVal(word) * defCpu->word_size();
         // if before start of binary image, use start address
         if (addr < rom._base) {
             addr = rom._base;
@@ -1120,9 +1121,9 @@ void DisScrn::do_cmd_line()
     }
 
     // check if it's a valid hex address
-    if (HexValid(word)) {
+    if (HexOctValid(word)) {
 //        // note: don't check for less than _start
-//        if (HexVal(word) <= _start.addr) {
+//        if (HexOctVal(word) <= _start.addr) {
             do_cmd_go(word);
             return;
 //        }
@@ -1943,11 +1944,40 @@ void DisScrn::do_trace(addr_t addr)
             if ((lfref & CODEREF) && !rom.AddrOutRange(addr)
                                   && !(lfref & RIPSTOP)
                                   && rom.get_type(refaddr) < mCode) {
-                push_stack(refaddr);
+                // check for indirect reference
+                switch (lfref & INDMASK) {
+                    case INDNONE:
+                        // it's okay
+                        break;
+
+                    case INDWBE:
+                        // read indirect 16-bit big-endian
+                        refaddr = (rom.get_data(refaddr) * 256 +
+                                   rom.get_data(refaddr + 1))
+                                  * defCpu->word_size();
+                        break;
+
+                    case INDWLE: // |
+                    case INDLBE: //  >-- to be implemented later as needed
+                    case INDLLE: // |
+                    default:
+                        // no idea what it is, ignore it
+                        refaddr = 0;
+                        break;
+                }
+
+                if (refaddr) {
+                    push_stack(refaddr);
+                }
             }
 
             // advance to next instruction
             addr += rom.get_len(addr);
+
+            // add skip reference
+            if (lfref & SKPMASK) {
+                push_stack(addr + ((lfref & SKPMASK) >> SKPSHFT) - 1);
+            }
 
             // stop if lfflag on this instruction
             if (lfref & LFFLAG) {
@@ -2045,7 +2075,7 @@ void DisScrn::do_cmd_cT()
 
 // =====================================================
 // clean label if not referenced from elsewhere
-void DisScrn:: do_cmd_cln()
+void DisScrn::do_cmd_cln()
 {
     char s[256];
 
@@ -2087,41 +2117,53 @@ void DisScrn:: do_cmd_cln()
     }
 #endif
 
-if (label) {
-    // start at beginning of rom
-    addr_t ad = rom._base;
+    if (label) {
+        int scale = defCpu->word_size();
 
-    // disassemble every line that is not mData
-    bool found = false;
-    while (ad < rom.get_end()) {
-        int len = 0;
-        if (rom.get_type(ad) != mData && !rom.test_attr(ad, ATTR_CONT)) {
-            // disassemble the address
-            int lfref = 0;
-            addr_t refaddr = 0;
-            len = disline.get_dis_line(ad, s, lfref, refaddr);
-            // if reference was found, stop looking
-            if ((lfref & (REFFLAG|CODEREF)) && (refaddr == label)) {
-                sprintf(s, "Found label %.4X at %.4X", (int) label, (int) ad);
-                error(s);
-                found = true;
-                break;
+        // start at beginning of rom
+        addr_t ad = rom._base;
+
+        // disassemble every line that is not mData
+        bool found = false;
+        while (ad < rom.get_end()) {
+            int len = 0;
+            if (rom.get_type(ad) != mData && !rom.test_attr(ad, ATTR_CONT)) {
+                // disassemble the address
+                int lfref = 0;
+                addr_t refaddr = 0;
+                len = disline.get_dis_line(ad, s, lfref, refaddr);
+                // if reference was found, stop looking
+                if ((lfref & (REFFLAG|CODEREF)) && (refaddr == label)) {
+                    if (defCpu->_radix & RAD_OCT) {
+                        sprintf(s, "Found label %.6o at %.6o", (int) label / scale,
+                                                               (int) ad / scale);
+                    } else {
+                        sprintf(s, "Found label %.4X at %.4X", (int) label / scale,
+                                                               (int) ad / scale);
+                    }
+                    error(s);
+                    found = true;
+                    break;
+                }
+            }
+            // advance to next instruction
+            if (len) {
+                ad += len;
+            } else {
+                ad++;
             }
         }
-        // advance to next instruction
-        if (len) {
-            ad += len;
-        } else {
-            ad++;
+        if (!found) {
+            // label was not referenced, so delete it here
+            if (defCpu->_radix & RAD_OCT) {
+                sprintf(s, "Deleted label at %.6o", (int) label / scale);
+            } else {
+                sprintf(s, "Deleted label at %.4X", (int) label / scale);
+            }
+            error(s);
+            rom.clear_attr_flag(label, ATTR_LMASK);
         }
     }
-    if (!found) {
-        // label was not referenced, so delete it here
-        sprintf(s, "Deleted label at %.4X", (int) label);
-        error(s);
-        rom.clear_attr_flag(label, ATTR_LMASK);
-    }
-}
 
 //  recenter(true);
     print_screen();
@@ -3271,6 +3313,91 @@ bool HexValid(const char *hexStr)
 
 
 // =====================================================
+int OctVal(const char *octStr)
+{
+    addr_t  octVal;
+    int     evalErr;
+    int     c;
+
+    evalErr = false;
+    octVal  = 0;
+
+    while ((c = toupper(*octStr++))) {
+        if ((c < '0') || (c > '7')) {
+            evalErr = true;
+        } else {
+            c = c - '0';
+            octVal = octVal * 8 + c;
+        }
+    }
+
+    if (evalErr) {
+        octVal = 0;
+//      Error("Invalid octal number");
+    }
+
+    return octVal;
+}
+
+
+// =====================================================
+bool OctValid(const char *octStr)
+{
+    // empty string is not valid
+    if (!octStr[0]) {
+        return false;
+    }
+
+    while (*octStr) {
+        char c = *octStr++;
+        if ((c < '0') || (c > '7')) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// =====================================================
+int HexOctVal(const char *hexStr)
+{
+    switch (toupper(*hexStr)) {
+        case '$':
+        case 'H':
+            return HexVal(hexStr+1);
+        case 'O':
+            return OctVal(hexStr+1);
+        default:
+            if (defCpu->_radix & RAD_OCT) {
+                return OctVal(hexStr);
+            } else {
+                return HexVal(hexStr);
+            }
+    }
+}
+
+
+// =====================================================
+bool HexOctValid(const char *hexStr)
+{
+    switch (toupper(*hexStr)) {
+        case '$':
+        case 'H':
+            return HexValid(hexStr+1);
+        case 'O':
+            return OctValid(hexStr+1);
+        default:
+            if (defCpu->_radix & RAD_OCT) {
+                return OctValid(hexStr);
+            } else {
+                return HexValid(hexStr);
+            }
+    }
+}
+
+
+// =====================================================
 uint32_t DecVal(const char *decStr)
 {
     uint32_t decVal;
@@ -3376,6 +3503,9 @@ int GetString(char *&s, char *word)
 
     // copy until the next quote or blank, and set s after the quote
     while (*s && *s != c) {
+        if (*s == '\\' && *(s+1)) {
+            s++;
+        }
         *word++ = *s++;
     }
     *word = 0;

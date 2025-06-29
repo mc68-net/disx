@@ -4,6 +4,8 @@ static const char versionName[] = "Motorola 68000 disassembler";
 
 #define MAC_A_TRAPS // comment to disable classic Mac OS A-Traps
 
+//#define LAZY_EXTWORD // uncomment to allow invalid extension word bits on 68000/68010
+
 #include "discpu.h"
 
 struct InstrRec {
@@ -43,12 +45,14 @@ private:
 
 enum {
     CPU_68000,
-    CPU_68010
+    CPU_68010,
+    CPU_68020,
 };
 
 Dis68K cpu_68K  ("68K",    CPU_68000, BIG_END, ADDR_24, '*', '$', "DC.B", "DC.W", "DC.L");
 Dis68K cpu_68000("68000",  CPU_68000, BIG_END, ADDR_24, '*', '$', "DC.B", "DC.W", "DC.L");
 Dis68K cpu_68010("68010",  CPU_68010, BIG_END, ADDR_24, '*', '$', "DC.B", "DC.W", "DC.L");
+Dis68K cpu_68020("68020",  CPU_68020, BIG_END, ADDR_24, '*', '$', "DC.B", "DC.W", "DC.L");
 
 
 Dis68K::Dis68K(const char *name, int subtype, int endian, int addrwid,
@@ -66,6 +70,7 @@ Dis68K::Dis68K(const char *name, int subtype, int endian, int addrwid,
     _endian  = endian;
     _hexchr  = hexChr;
     _addrwid = addrwid;
+    _radix   = RAD_HEX16BE;
 
     add_cpu();
 }
@@ -116,7 +121,21 @@ enum InstType {
     o_ShiftRotImm,  // 32
     o_ShiftRotReg,  // 33
     o_A_Trap,       // 34
-    o_ADDA_SUBA     // 35
+    o_ADDA_SUBA,    // 35
+
+    o_BitField,     // 68020 bit field instructions
+    o_PMOVE,        // 68030 Move to/from MMU registers
+    o_BKPT,         // 68020 BKPT
+    o_CALLM,        // 68020 CALLM
+    o_CAS,          // 68020 CAS
+    o_CAS2,         // 68020 CAS2
+    o_CMP2,         // 68020 CMP2/CHK2
+    o_PACK,         // 68020 PACK/UNPK
+    o_RTM,          // 68020 RTM
+    o_TRAPcc,       // 68020 TRAPcc
+    o_EA_Dn_020,    // 68020 CHK.L
+    o_One_Dn_020,   // 68020 EXTB.L
+    o_MUL_020,      // 68020 MUL/DIV long
 };
 
 struct TrapRec {
@@ -130,6 +149,49 @@ typedef const struct TrapRec *TrapPtr;
 
 static const struct InstrRec M68K_opcdTable[] =
 {
+    // 68020 opcodes
+
+    {0xFFF0, 0x06C0, o_RTM,         "RTM"    , LFFLAG },
+    {0xFFC0, 0x06C0, o_CALLM,       "CALLM"  , 0 },
+    {0xF9C0, 0x00C0, o_CMP2,        "CMP2"   , 0 }, // CMP2/CHK2
+    {0xF9FF, 0x08FC, o_CAS2,        "CAS2"   , 0 },
+    {0xF9C0, 0x08C0, o_CAS,         "CAS"    , 0 },
+    {0xF1C0, 0x4100, o_EA_Dn_020,   "CHK.L"  , 0 },
+    {0xFFF8, 0x4808, o_LINK,        "LINK"   , 0 },
+    {0xFFF8, 0x4848, o_BKPT,        "BKPT"   , 0 },
+    {0xFFF8, 0x49C0, o_One_Dn_020,  "EXTB.L" , 0 },
+    {0xFFC0, 0x4C00, o_MUL_020,     "MUL"    , 0 },
+    {0xFFC0, 0x4C40, o_MUL_020,     "DIV"    , 0 },
+    {0xFFF8, 0x50F8, o_TRAPcc,      "TRAPT"  , 0 },
+    {0xFFF8, 0x51F8, o_TRAPcc,      "TRAPF"  , 0 },
+    {0xFFF8, 0x52F8, o_TRAPcc,      "TRAPHI" , 0 },
+    {0xFFF8, 0x53F8, o_TRAPcc,      "TRAPLS" , 0 },
+    {0xFFF8, 0x54F8, o_TRAPcc,      "TRAPCC" , 0 }, // also TRAPHS
+    {0xFFF8, 0x55F8, o_TRAPcc,      "TRAPCS" , 0 }, // also TRAPLO
+    {0xFFF8, 0x56F8, o_TRAPcc,      "TRAPNE" , 0 },
+    {0xFFF8, 0x57F8, o_TRAPcc,      "TRAPEQ" , 0 },
+    {0xFFF8, 0x58F8, o_TRAPcc,      "TRAPVC" , 0 },
+    {0xFFF8, 0x59F8, o_TRAPcc,      "TRAPVS" , 0 },
+    {0xFFF8, 0x5AF8, o_TRAPcc,      "TRAPPL" , 0 },
+    {0xFFF8, 0x5BF8, o_TRAPcc,      "TRAPMI" , 0 },
+    {0xFFF8, 0x5CF8, o_TRAPcc,      "TRAPGE" , 0 },
+    {0xFFF8, 0x5DF8, o_TRAPcc,      "TRAPLT" , 0 },
+    {0xFFF8, 0x5EF8, o_TRAPcc,      "TRAPGT" , 0 },
+    {0xFFF8, 0x5FF8, o_TRAPcc,      "TRAPLE" , 0 },
+    {0xF1F0, 0x8140, o_PACK,        "PACK"   , 0 },
+    {0xF1F0, 0x8180, o_PACK,        "UNPK"   , 0 },
+    {0xFFC0, 0xE8C0, o_BitField,    "BFTST"  , 0 },
+    {0xFFC0, 0xE9C0, o_BitField,    "BFEXTU" , 0 },
+    {0xFFC0, 0xEAC0, o_BitField,    "BFCHG"  , 0 },
+    {0xFFC0, 0xEBC0, o_BitField,    "BFEXTS" , 0 },
+    {0xFFC0, 0xECC0, o_BitField,    "BFCLR"  , 0 },
+    {0xFFC0, 0xEDC0, o_BitField,    "BFFFO"  , 0 },
+    {0xFFC0, 0xEEC0, o_BitField,    "BFSET"  , 0 },
+    {0xFFC0, 0xEFC0, o_BitField,    "BFINS"  , 0 },
+    {0xFFC0, 0xF000, o_PMOVE,       "PMOVE"  , 0 },
+
+// -----------------------------------------------------
+
     // and     cmp     typ            op       lfref
     {0xFFC0, 0x00C0, o_Invalid,     ""       , 0 },
     {0xFF00, 0x0000, o_Immed,       "ORI"    , 0 },
@@ -143,21 +205,26 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFF00, 0x0A00, o_Immed,       "EORI"   , 0 },
     {0xFFC0, 0x0CC0, o_Invalid,     ""       , 0 },
     {0xFF00, 0x0C00, o_Immed,       "CMPI"   , 0 },
+
     {0xF138, 0x0108, o_MOVEP,       "MOVEP"  , 0 },
     {0xF1C0, 0x0100, o_Dn_EA,       "BTST"   , 0 },
     {0xF1C0, 0x0140, o_Dn_EA,       "BCHG"   , 0 },
     {0xF1C0, 0x0180, o_Dn_EA,       "BCLR"   , 0 },
     {0xF1C0, 0x01C0, o_Dn_EA,       "BSET"   , 0 },
+
     {0xFFC0, 0x0800, o_StatBit,     "BTST"   , 0 },
     {0xFFC0, 0x0840, o_StatBit,     "BCHG"   , 0 },
     {0xFFC0, 0x0880, o_StatBit,     "BCLR"   , 0 },
     {0xFFC0, 0x08C0, o_StatBit,     "BSET"   , 0 },
+
     {0xFFC0, 0x0EC0, o_Invalid,     ""       , 0 },
     {0xFF00, 0x0E00, o_MOVES,       "MOVES"  , 0 },
+
     {0xF1C0, 0x1040, o_Invalid,     ""       , 0 },
     {0xF000, 0x1000, o_MOVE,        "MOVE"   , 0 },
     {0xE1C0, 0x2040, o_MOVE,        "MOVEA"  , 0 },
     {0xE000, 0x2000, o_MOVE,        "MOVE"   , 0 },
+
     {0xF1C0, 0x4180, o_EA_Dn,       "CHK"    , 0 },
     {0xF1C0, 0x41C0, o_LEA,         "LEA"    , 0 },
     {0xFFC0, 0x40C0, o_MoveFromSR,  "MOVE"   , 0 },
@@ -181,6 +248,7 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFFF8, 0x4E50, o_LINK,        "LINK"   , 0 },
     {0xFFF8, 0x4E58, o_UNLK,        "UNLK"   , 0 },
     {0xFFF0, 0x4E60, o_MOVE_USP,    "MOVE"   , 0 },
+
     {0xFFFF, 0x4E70, o_Implied,     "RESET"  , LFFLAG},
     {0xFFFF, 0x4E71, o_Implied,     "NOP"    , 0 },
     {0xFFFF, 0x4E72, o_STOP,        "STOP"   , LFFLAG},
@@ -190,8 +258,10 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFFFF, 0x4E76, o_Implied,     "TRAPV"  , 0 },
     {0xFFFF, 0x4E77, o_Implied,     "RTR"    , LFFLAG},
     {0xFFFE, 0x4E7A, o_MOVEC,       "MOVEC"  , 0 },
+
     {0xFFC0, 0x4E80, o_OneAddr,     "JSR"    , REFFLAG | CODEREF},
     {0xFFC0, 0x4EC0, o_OneAddr,     "JMP"    , LFFLAG | REFFLAG | CODEREF},
+
     {0xFFF8, 0x50C8, o_DBcc,        "DBT"    , REFFLAG | CODEREF},
     {0xFFF8, 0x51C8, o_DBcc,        "DBRA"   , REFFLAG | CODEREF},
     {0xFFF8, 0x52C8, o_DBcc,        "DBHI"   , REFFLAG | CODEREF},
@@ -208,6 +278,7 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFFF8, 0x5DC8, o_DBcc,        "DBLT"   , REFFLAG | CODEREF},
     {0xFFF8, 0x5EC8, o_DBcc,        "DBGT"   , REFFLAG | CODEREF},
     {0xFFF8, 0x5FC8, o_DBcc,        "DBLE"   , REFFLAG | CODEREF},
+
     {0xFFC0, 0x50C0, o_OneAddr,     "ST"     , 0 },
     {0xFFC0, 0x51C0, o_OneAddr,     "SF"     , 0 },
     {0xFFC0, 0x52C0, o_OneAddr,     "SHI"    , 0 },
@@ -224,8 +295,10 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFFC0, 0x5DC0, o_OneAddr,     "SLT"    , 0 },
     {0xFFC0, 0x5EC0, o_OneAddr,     "SGT"    , 0 },
     {0xFFC0, 0x5FC0, o_OneAddr,     "SLE"    , 0 },
+
     {0xF100, 0x5000, o_ADDQ_SUBQ,   "ADDQ"   , 0 },
     {0xF100, 0x5100, o_ADDQ_SUBQ,   "SUBQ"   , 0 },
+
     {0xFF00, 0x6000, o_Bcc,         "BRA"    , LFFLAG | REFFLAG | CODEREF},
     {0xFF00, 0x6100, o_Bcc,         "BSR"    , REFFLAG | CODEREF},
     {0xFF00, 0x6200, o_Bcc,         "BHI"    , REFFLAG | CODEREF},
@@ -242,6 +315,7 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFF00, 0x6D00, o_Bcc,         "BLT"    , REFFLAG | CODEREF},
     {0xFF00, 0x6E00, o_Bcc,         "BGT"    , REFFLAG | CODEREF},
     {0xFF00, 0x6F00, o_Bcc,         "BLE"    , REFFLAG | CODEREF},
+
     {0xF100, 0x7000, o_MOVEQ,       "MOVEQ"  , 0 },
     {0xF1F0, 0x8100, o_ABCD_SBCD,   "SBCD"   , 0 },
     {0xF1C0, 0x80C0, o_EA_Dn,       "DIVU"   , 0 },
@@ -252,12 +326,14 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xF130, 0x9100, o_ADDX_SUBX,   "SUBX"   , 0 },
     {0xF100, 0x9000, o_EA_Dn_Sz,    "SUB"    , 0 },
     {0xF100, 0x9100, o_Dn_EA_Sz,    "SUB"    , 0 },
+
     {0xFC00, 0xAC00, o_A_Trap,      "A-Trap" , LFFLAG},
     {0xFFFF, 0xA9F0, o_A_Trap,      "A-Trap" , LFFLAG},
     {0xFFFF, 0xA9F2, o_A_Trap,      "A-Trap" , LFFLAG},
     {0xFFFF, 0xA9F3, o_A_Trap,      "A-Trap" , LFFLAG},
     {0xFFFF, 0xA9F4, o_A_Trap,      "A-Trap" , LFFLAG},
     {0xF000, 0xA000, o_A_Trap,      "A-Trap" , 0 },
+
     {0xF0C0, 0xB0C0, o_ADDA_SUBA,   "CMPA"   , 0 },
     {0xF138, 0xB108, o_CMPM,        "CMPM"   , 0 },
     {0xF100, 0xB000, o_EA_Dn_Sz,    "CMP"    , 0 },
@@ -273,6 +349,7 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xF130, 0xD100, o_ADDX_SUBX,   "ADDX"   , 0 },
     {0xF100, 0xD000, o_EA_Dn_Sz,    "ADD"    , 0 },
     {0xF100, 0xD100, o_Dn_EA_Sz,    "ADD"    , 0 },
+
     {0xFFC0, 0xE0C0, o_OneAddr,     "ASR"    , 0 },
     {0xFFC0, 0xE1C0, o_OneAddr,     "ASL"    , 0 },
     {0xFFC0, 0xE2C0, o_OneAddr,     "LSR"    , 0 },
@@ -282,6 +359,7 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xFFC0, 0xE6C0, o_OneAddr,     "ROR"    , 0 },
     {0xFFC0, 0xE7C0, o_OneAddr,     "ROL"    , 0 },
     {0xF8C0, 0xE8C0, o_Invalid,     ""       , 0 },
+
     {0xF138, 0xE000, o_ShiftRotImm, "ASR"    , 0 },
     {0xF138, 0xE100, o_ShiftRotImm, "ASL"    , 0 },
     {0xF138, 0xE008, o_ShiftRotImm, "LSR"    , 0 },
@@ -298,6 +376,9 @@ static const struct InstrRec M68K_opcdTable[] =
     {0xF138, 0xE130, o_ShiftRotReg, "ROXL"   , 0 },
     {0xF138, 0xE038, o_ShiftRotReg, "ROR"    , 0 },
     {0xF138, 0xE138, o_ShiftRotReg, "ROL"    , 0 },
+
+//  {0xF000, 0xF000, o_F_Trap,      "F-Trap" , 0 },
+
     {0x0000, 0x0000, o_Invalid,     ""       , 0 }
 };
 
@@ -1097,7 +1178,7 @@ addr_t Dis68K::FetchSize(int addr, int &len, int size)
 }
 
 
-// NOTE: MOVE can have two refaddrs, the result is that only the last one will become refaddr
+// NOTE: MOVE can have two refaddrs, but only the last one will become the refaddr
 // The instructions that have this problem should only be ones that were removed for Coldfire
 
 void Dis68K::AddrMode(int mode, int reg, int size, char *parms, int addr, int &len, bool &invalid,
@@ -1108,6 +1189,8 @@ void Dis68K::AddrMode(int mode, int reg, int size, char *parms, int addr, int &l
     const char *sz;
     char    s[256];
     addr_t  ra;
+    int     addr0 = addr + len; // address of extension word
+    int     hint = rom.get_hint(addr);
 
 //    if (size == 3 || invalid) {
 //        invalid = true;
@@ -1156,14 +1239,97 @@ void Dis68K::AddrMode(int mode, int reg, int size, char *parms, int addr, int &l
             }
             reg2 = GetBits(n, 12, 3);
 
-            // flag errors in extension word
+            if (((n & 0x0108) == 0x0100) && _subtype >= CPU_68020) { // "full" extension word
+
+                bool fallthrough = false;
+                if (n & 0x0100) { // full extension flag
+
+                    bool bs = (n >> 7) & 1;
+                    // bool is = (n >> 6) & 1;
+                    int bds = (n >> 4) & 3;
+                    // int iis = n & 7;
+
+                    ra = 0;
+                    switch (bds) {
+                        case 0: invalid = true; break;
+                        case 1:                 break;
+                        case 2: ra = FetchWord(addr, len); break;
+                        case 3: ra = FetchLong(addr, len); break;
+                    }
+
+                    // IS bit with I/IS bits
+                    switch (((n & 0x40) >> 2) | (n & 7)) {
+
+                        case 0x00: // no memory indirect action
+                        case 0x10: // no memory indirect action
+                        // (these need to just do the short extension stuff?)
+                            fallthrough = true;
+                            break;
+// these are really complicated
+#if 0
+                        case 0x01: // indirect preindexed with null outer displacement
+//                          ra = FetchWord(addr, len);
+//                          lfref &= ~CODEREF; // not a code address if it's indexed!
+                            RefStr(ra, s, lfref, refaddr);
+                            sprintf(parms, "([%s])", s);
+                            break;
+#endif
+#if 0
+                        case 0x02: // indirect preindexed with word outer displacement
+                        case 0x03: // indirect preindexed with long outer displacement
+                        case 0x04: // reserved
+                        case 0x05: // indirect postindexed with null outer displacement
+                        case 0x06: // indirect postindexed with word outer displacement
+                        case 0x07: // indirect postindexed with long outer displacement
+#endif
+                        case 0x11: // -> memory indirect with null outer displacement
+                            RefStr(ra, s, lfref, refaddr);
+//                          lfref &= ~CODEREF; // not a code address if it's indexed!
+                            if (bs) sprintf(parms, "([%s])", s);
+                               else sprintf(parms, "([%s,A%d])", s, reg);
+                            break;
+#if 0
+                        case 0x12: // memory indirect with word outer displacement
+                        case 0x13: // memory indirect with long outer displacement
+#endif
+                        // 14-17 reserved
+                        default:
+                            // specific combination not yet implemented!
+                            invalid = true;
+                        break;
+                    }
+                }
+                if (!fallthrough)
+                    break;
+            }
+
+            // bit 8 is zero, check for 68020 scale factor
+            if ((n & 0x0600) && _subtype >= CPU_68020) {
+                int scale = GetBits(n, 9, 2);
+                scale = 1 << scale;
+                n = n & 0xFF;
+                if (n >= 128) {
+                    n = 256-n;
+                    sprintf(parms, "-$%.2X(A%d,%c%d%s*%d)", n, reg, r, reg2, sz, scale);
+                } else {
+                    sprintf(parms, "$%.2X(A%d,%c%d%s*%d)", n, reg, r, reg2, sz, scale);
+                }
+                break;
+            }
+
+            // flag errors in extension word on 68000/68010
             // these bits are ignored by 68000, but can't be re-assembled
             // instead of setting illegal, a flag character is added
             if (GetBits(n, 8, 3)) {
+#ifdef LAZY_EXTWORD
                 // invalid bits in extension word were set
                 strcat(parms, "!");
                 lfref |= RIPSTOP;
                 parms++;
+#else
+                invalid = true;
+                break;
+#endif
             }
 
             n = n & 0xFF;
@@ -1198,7 +1364,7 @@ void Dis68K::AddrMode(int mode, int reg, int size, char *parms, int addr, int &l
                     if (n & 0x8000) {
                         n |= 0xFFFF0000;
                     }
-                    ra = (addr + 2 + n) & 0x00FFFFFF;
+                    ra = (addr0 + n) & 0x00FFFFFF;
                     RefStr(ra, s, lfref, refaddr);
                     sprintf(parms, "%s(PC)", s);                    
                     break;
@@ -1220,7 +1386,7 @@ void Dis68K::AddrMode(int mode, int reg, int size, char *parms, int addr, int &l
                     if (n >= 128) {
                         n = n - 256;
                     }
-                    ra = (addr + 2 + n) & 0x00FFFFFF;
+                    ra = (addr0 + n) & 0x00FFFFFF;
                     lfref &= ~CODEREF; // not a code address if it's indexed!
                     RefStr(ra, s, lfref, refaddr);
                     sprintf(parms, "%s(PC,%c%d%s)", s, r, reg2, sz);
@@ -1240,16 +1406,16 @@ void Dis68K::AddrMode(int mode, int reg, int size, char *parms, int addr, int &l
 
                         case s_Long:
                             n = FetchLong(addr, len);
-#if 1
                             // parse immediate as a potential address reference
-                            if (n >= 0x1000) { // arbitrary cut-off to avoid making labels from constants
+                            if (n >= 0x1000 && // arbitrary cut-off to avoid making labels from constants
+                                !(hint & 1) ) { // disable reference if odd hint
                                 ra = n;
                                 RefStr(ra, s, lfref, refaddr);
                                 sprintf(parms, "#%s", s);
-                            } else
-#endif
+                            } else {
                                 // parse immediate as an immediate
                                 sprintf(parms, "#$%.8X", n);
+                            }
                             break;
 
                         case s_UseCCR:
@@ -1301,25 +1467,6 @@ void Dis68K::DstAddr(int opcd, int size, char *parms, int addr, int &len, bool &
     reg  = GetBits(opcd, 9, 3);
     AddrMode(mode, reg, size, parms, addr, len, invalid, lfref, refaddr);
 }
-
-
-#if 0 // not used
-static void AppendReg(char slashChar, int i, char *parms, char *names, bool *slashFlag)
-{
-    char *p;
-
-    p = parms + strlen(parms);
-
-    if (*slashFlag) {
-        *p++ = slashChar;
-    }
-    *slashFlag = true;
-    *p++ = names[i*2];
-    *p++ = names[i*2+1];
-
-    *p = 0;
-}
-#endif
 
 
 void Dis68K::MOVEMRegs(int mode, char *parms, int regs)
@@ -1456,6 +1603,7 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
     opSize  = -1;
 
     bool invalid = true;
+    int hint = rom.get_hint(addr);
 
     opcd = FetchWord(addr, len);
     instr = FindInstr(opcd);
@@ -1492,15 +1640,14 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
                         break;
 
                     case s_Long:
-#if 1
                         // parse immediate as a potential address reference
                         if (n >= 0x1000 && // arbitrary cut-off to avoid making labels from constants
+                            !(hint & 1) && // disable reference if odd hint
                             (n & 0xFF000000) == 0) {
                             ra = n;
                             RefStr(ra, s2, lfref, refaddr);
                             sprintf(parms, "#%s,%s", s2, s);
                         } else
-#endif
                         sprintf(parms, "#$%.8X,%s", n, s);
                         break;
                 }
@@ -1586,9 +1733,16 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
                 opSize = -1;
                 break;
 
+            case o_EA_Dn_020:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+                // fallthrough
+
             case o_EA_Dn:               // 11
-                    SrcAddr(opcd, s_Word, s, addr, len, invalid, lfref,  refaddr);
-                    sprintf(parms, "%s,D%d", s,  GetBits(opcd, 9, 3));
+                SrcAddr(opcd, s_Word, s, addr, len, invalid, lfref,  refaddr);
+                sprintf(parms, "%s,D%d", s,  GetBits(opcd, 9, 3));
                 break;
 
             case o_LEA:                 // 12
@@ -1599,6 +1753,13 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
             case o_OneAddr:             // 13
                 SrcAddr(opcd, s_Byte, parms, addr, len, invalid, lfref, refaddr);
                 break;
+
+            case o_One_Dn_020:          // 14
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+                // fallthrough
 
             case o_One_Dn:              // 14
                 sprintf(parms, "D%d", GetBits(opcd, 0, 3));
@@ -1627,6 +1788,16 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
 
             case o_LINK:                // 17
                 n = FetchWord(addr, len);
+                if (opcd & 0x0008) {
+                    if (_subtype < CPU_68020) {
+                        invalid = true;
+                        break;
+                    }
+                    opSize = s_Long;
+                    n = (n << 16) + FetchWord(addr, len);
+                    sprintf(parms, "A%d,#-$%.8X", GetBits(opcd, 0, 3), 0xFFFFFFFF & -n);
+                    break;
+                }
                 if (n > 32767) {
                     sprintf(parms, "A%d,#-$%.4X", GetBits(opcd, 0, 3), 65536-n);
                 } else {
@@ -1719,26 +1890,26 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
                     ra = addr + 2 + n;
                     RefStr(ra, parms, lfref, refaddr);
                     opSize = s_Word;
-                }
-#if 0
-                else if (n == 255) { // 68020 long branch
+                } else if (n == 255 && _subtype >= CPU_68020) { // 68020 long branch
                     n = FetchLong(addr, len);
                     ra = addr + 2 + n;
                     RefStr(ra, parms, lfref, refaddr);
                     opSize = s_Long;
-                }
+                } else if (n & 1) { // odd offset
+#if 0
+                    // allow disassembly but rip-stop for odd offset
+                    lfref |= RIPSTOP;
+#else
+                    // odd offset is invalid (does 68008 even allow it?)
+                    invalid = true;
 #endif
-                else { // byte branch
+                } else { // byte branch
                     if (n > 127) {
                         n = n - 256;
                     }
                     ra = addr + 2 + n;
                     RefStr(ra, parms, lfref, refaddr);
                     opSize = s_Byte;
-                }
-                // rip-stop for odd address
-                if (ra & 1) {
-                    lfref |= RIPSTOP;
                 }
                 break;
 
@@ -1817,6 +1988,269 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
                 opSize = GetBits(opcd, 8, 1) + s_Word;
                 SrcAddr(opcd, opSize, s, addr, len, invalid, lfref, refaddr);
                 sprintf(parms, "%s,A%d", s, GetBits(opcd, 9, 3));
+                break;
+
+// -----------------------------------------------------
+
+            case o_BitField:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                // get extension word
+                n = FetchWord(addr, len);
+
+                // parse ea
+                SrcAddr(opcd, opSize, parms, addr, len, invalid, lfref, refaddr);
+                if (invalid) break;
+
+                if (n & 0x8000) { // high bit of extension word must be zero
+                    invalid = true;
+                    break;
+                } else { // {Dofs:Dwid},Dreg
+                    strcat(parms, "{");
+
+                    int ofs = GetBits(n, 6, 5);
+                    if (n & 0x0800)
+                        strcat(parms, "D");
+                    sprintf(s, "%d:", ofs);
+                    strcat(parms, s);
+
+                    int wid = GetBits(n, 0, 5);
+                    if (n & 0x0020)
+                        strcat(parms, "D");
+                    sprintf(s, "%d}", wid);
+                    strcat(parms, s);
+
+                    if (opcd & 0x0100) { // BFEXTU, BFEXTS, BFFFO, BFINS
+                        int reg = GetBits(n, 12, 3);
+                        sprintf(s, ",D%d", reg);
+                        strcat(parms, s);
+                    }
+                }
+                break;
+
+            case o_PMOVE:
+            {
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                // get extension word
+                int n = FetchWord(addr, len);
+                int fmt   = GetBits(n, 13, 3);
+                int p_reg = GetBits(n, 10, 3);
+                bool rw = (n >> 9) & 1;
+                bool fd = (n >> 8) & 1;
+                // bits 7..0 should be == 0x00
+
+                if (fd) {
+                    strcpy(opcode, "PMOVEFD");
+                }
+
+                const char *reg = "???";
+                switch (fmt << 4 | p_reg) {
+                    default:
+                        break;
+
+// this stuff depends a bit too much on the specific CPU type
+#if 1 // 68030 MMU registers
+                    case 0x20: reg = "TC";    break;
+                    case 0x22: reg = "SRP";   break;
+                    case 0x23: reg = "CRP";   break;
+                    case 0x02: reg = "TT0";   break;
+                    case 0x03: reg = "TT1";   break;
+                    case 0x30: reg = "ACUSR"; break;
+#endif
+#if 0 // 68851 MMU registers
+                    case 0x20: reg = "TCR";   break;
+                    case 0x21: reg = "DRP";   break;
+                    case 0x22: reg = "SRP";   break;
+                    case 0x23: reg = "CRP";   break;
+                    case 0x24: reg = "CAL";   break;
+                    case 0x25: reg = "VAL";   break;
+                    case 0x26: reg = "SCC";   break;
+                    case 0x27: reg = "AC";    break;
+                    case 0x01: reg = "AC0";   break;
+                    case 0x03: reg = "AC1";   break;
+                    case 0x30: reg = "PSR";   break;
+                    case 0x31: reg = "PCSR";  break;
+#endif
+                }
+
+                if (rw) {
+                     parms = stpcpy(parms, reg);
+                     parms = stpcpy(parms, ",");
+                }
+
+                // parse ea
+                SrcAddr(opcd, opSize, parms, addr, len, invalid, lfref, refaddr);
+                if (invalid) break;
+
+                if (!rw) {
+                     parms += strlen(parms);
+                     parms = stpcpy(parms, ",");
+                     parms = stpcpy(parms, reg);
+                }
+
+                break;
+            }
+
+            case o_BKPT:
+                sprintf(parms, "#%d", opcd & 0x07);
+                break;
+
+            case o_RTM:
+                sprintf(parms, "%c%d", opcd & 0x0008 ? 'A' : 'D', opcd & 0x0007);
+                break;
+
+            case o_CALLM:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                n = FetchWord(addr, len);
+                if (n & 0xFF00) {
+                    invalid = true;
+                    break;
+                }
+                SrcAddr(opcd, -1, s, addr, len, invalid, lfref, refaddr);
+                sprintf(parms, "#%d,%s", n, s);
+                break;
+
+            case o_CAS:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                n = FetchWord(addr, len);
+                opSize = GetBits(opcd, 9, 2) - 1;
+                if (opSize < 0
+                     || (n & 0xFC38) != 0x0000 ) {
+                    invalid = true;
+                    break;
+                }
+                SrcAddr(opcd, opSize, s, addr, len, invalid, lfref, refaddr);
+                sprintf(parms, "D%d,D%d,%s", n & 0x07, (n >> 6) & 0x07, s);
+                break;
+
+            case o_CAS2:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                n = FetchWord(addr, len);
+                i = FetchWord(addr, len);
+                opSize = GetBits(opcd, 9, 2) - 1;
+                if (opSize < 0
+                     || (n & 0x0E1C) != 0
+                     || (i & 0x0E1C) != 0 ) {
+                    invalid = true;
+                    break;
+                }
+                sprintf(parms, "D%d:D%d,D%d:D%d,(%c%d):(%c%d)",
+                               GetBits(n, 0, 3), GetBits(i, 0, 3),
+                               GetBits(n, 6, 3), GetBits(i ,6, 3),
+                               (n & 0x8000) ? 'A':'D', GetBits(n, 12, 3),
+                               (i & 0x8000) ? 'A':'D', GetBits(i, 12, 3) );
+                break;
+
+            case o_CMP2:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                n = FetchWord(addr, len);
+                opSize = GetBits(opcd, 9, 2);
+                if (opSize < 0
+                     || (n & 0x07FF) != 0x0000 ) {
+                    invalid = true;
+                    break;
+                }
+                if (n & 0x0800) {
+                    strcpy(opcode, "CHK2");
+                }
+                SrcAddr(opcd, opSize, s, addr, len, invalid, lfref, refaddr);
+                sprintf(parms, "%s,%c%d", s, (n & 0x8000) ? 'A':'D', GetBits(n, 12, 3));
+                break;
+
+            case o_PACK:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                n = FetchWord(addr, len);
+                H4Str(n, s);
+                if (opcd & 0x0008) {
+                    // -(Ax),-(Ay),#n
+                    sprintf(parms, "-(A%d),-(A%d),#%s", GetBits(opcd, 0, 3),
+                                                        GetBits(opcd, 9, 3), s);
+                } else {
+                    // Dx,Dy,#n
+                    sprintf(parms, "D%d,D%d,#%s", GetBits(opcd, 0, 3),
+                                                  GetBits(opcd, 9, 3), s);
+                }
+                break;
+
+            case o_TRAPcc:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+
+                if (opcd & 0x0002) {
+                    n = FetchWord(addr, len);
+                }
+                if (opcd & 0x0001) {
+                    n = (n << 16) + FetchWord(addr, len);
+                }
+                switch (opcd & 0x0007) {
+                    case 0x0002: // .W
+                        strcat(opcode, ".W");
+                        sprintf(parms, "#%4X", n);
+                        break;
+                    case 0x0003: // .L
+                        strcat(opcode, ".L");
+                        sprintf(parms, "#%8X", n);
+                        break;
+                    case 0x0004: // no words
+                        break;
+                    default:
+                        invalid = true;
+                        break;
+                }
+                break;
+
+            case o_MUL_020:
+                if (_subtype < CPU_68020) {
+                    invalid = true;
+                    break;
+                }
+                n = FetchWord(addr, len);
+                opSize = s_Long;
+
+                if (n & 0x0800) {
+                     strcat(opcode,"U");
+                } else {
+                     strcat(opcode,"S");
+                }
+                if (n & 0x0400) {
+                     strcat(opcode,"L");
+                }
+
+                SrcAddr(opcd, opSize, s, addr, len, invalid, lfref, refaddr);
+                if (!(opcd & 0x0040) && !(n & 0x0400)) {
+                    sprintf(parms, "%s,D%d", s, GetBits(n, 0, 3));
+                } else {
+                    sprintf(parms, "%s,D%d:D%d", s, GetBits(n, 0, 3), GetBits(n, 12,3));
+                }
                 break;
 
             default:

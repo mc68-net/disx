@@ -399,7 +399,7 @@ This is a rough estimation of the quality of each disassembler:
 5  dis68HC11.cpp - tested with many re-assemblies, but few 6303 examples
 2  dis68HC12.cpp - tested on an example and an "all opcodes" binary
 3  dis68HC05.cpp - few examples to test it on
-5  dis68k.cpp    - heavy usage and re-assmblies
+5  dis68k.cpp    - heavy usage and re-assemblies for 68000; 68020 works on a few samples
 4  dis8051.cpp   - tested with many re-assemblies
 3  dis8048.cpp   - tested with re-assemblies, but suffers from guessing bank selects
 3  dis8008.cpp   - tested on a few re-assemblies
@@ -547,6 +547,7 @@ New features:
 - added Data General Nova disassembler
 - added CP1610 disassembler
 - added IMP-16 disassembler
+- 68K: added initial 68020 support
 
 Bugs fixed:
 - reset hint flags when changing instr type

@@ -2205,6 +2205,7 @@ int Dis68K::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t 
                     break;
                 }
 
+                n = 0;
                 if (opcd & 0x0002) {
                     n = FetchWord(addr, len);
                 }

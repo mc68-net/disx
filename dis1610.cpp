@@ -299,7 +299,7 @@ int Dis1610::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
                 break;
 
             case o_TwoReg:
-                if ((opcd & 7) == 7 && (opcd & 0x03C0) != 0x0800 // R7 but not TSTR
+                if ((opcd & 7) == 7 && (opcd & 0x03C0) != 0x0080 // R7 but not TSTR
                                     && (opcd & 0x03C0) != 0x0240) { //      or CMPR
 //                  strcpy(parms, "PC");
                     lfref |= LFFLAG;
@@ -408,7 +408,7 @@ int Dis1610::dis_line(addr_t addr, char *opcode, char *parms, int &lfref, addr_t
                 break;
 
             case o_Immed:
-                if ((opcd & 7) == 7 && (opcd & 0x03C0) != 0x0278) { // R7 but not MVOI
+                if ((opcd & 7) == 7 && (opcd & 0x03F8) != 0x0278) { // R7 but not MVOI
 //                  strcpy(parms, "PC");
                     lfref |= LFFLAG;
                 }

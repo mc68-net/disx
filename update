@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+die() { ec=$1; shift; echo 1>&2 "$@"; exit $ec; }
+
+git svn --version >/dev/null 2>&1 \
+    || die 3 '`git svn` not found; apt install git-svn?'
+
 cd "$(dirname "$0")"
 
 #   Since we'll be switching branches, the authors file has to be copied

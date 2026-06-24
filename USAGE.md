@@ -165,11 +165,11 @@ the current line.
     C       Disassemble as code until unconditional branch, illegal
             instruction, rip-stop (see below), or already disassembled code.
 
-    T       Trace disassemble from current instruction. Same rules as `C`
+    t       Trace disassemble from current instruction. Same rules as `C`
             except that all code references are followed and disassembled
             as well.
 
-    ^T      Disassemble as a data word and trace from the referenced
+    T       Disassemble as a data word and trace from the referenced
             address. This is intended for jump tables. The reference
             address will become a code label when appropriate.
 

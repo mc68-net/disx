@@ -36,6 +36,7 @@ struct cmd_char_t char_cmds[] =
     { 'h',  &DisScrn::do_cmd_h   }, // disassemble as hex
     { 'w',  &DisScrn::do_cmd_w   }, // disassemble as words
     { 0x17, &DisScrn::do_cmd_w1  }, // disassemble as word address minus one
+    { 0x1D, &DisScrn::do_cmd_ref }, // go to refaddr
     { 'W',  &DisScrn::do_cmd_W   }, // shft-W disassemble as reverse words
     { '\\', &DisScrn::do_cmd_lng }, // disassemble as longs
     { 'd',  &DisScrn::do_cmd_d   }, // disassemble as decimal word
@@ -72,6 +73,7 @@ struct cmd_char_t char_cmds[] =
 
     { '`',  &DisScrn::do_cmd_cen }, // recenter screen
     { 'M',  &DisScrn::do_cmd_center }, // move selecton to center of screen
+    { 'z',  &DisScrn::do_cmd_center }, // move selecton to center of screen
     { '~',  &DisScrn::do_cmd_top }, // move selecton to near top of screen
     { 'H',  &DisScrn::do_cmd_top }, // move selecton to near top of screen
 

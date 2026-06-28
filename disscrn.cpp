@@ -19,6 +19,9 @@ DisScrn scrn;
 // control-C status flag
 bool DisScrn::_ctrl_c = false;
 
+//  Should be in DisScrn, but that breaks binary compatibility of saves.
+bool _searchfwd = true;     // last '/'/'?' search was forward?
+
 // =====================================================
 // dispatch table for single-char commands
 
@@ -318,6 +321,7 @@ void DisScrn::init_scrn(bool reset)
     _err[0]    = 0;
     _errbeep   = false;
     _search[0] = 0;
+    _searchfwd = true;
     _quit      = false;
     _rpt_key   = 0;
     _rpt_count = 1;
@@ -1179,6 +1183,8 @@ const char *rem_blank(char *s)
 // find the next/previous line matching _search
 void DisScrn::do_search(bool UNUSED fwd)
 {
+    _searchfwd = fwd;       // save for 'n'/'N' commands
+
     // remove excess blanks from search string
     char search[sizeof _search];
     strcpy(search, _search);
@@ -2997,6 +3003,14 @@ void DisScrn::do_key(int key)
         case 0x06: // ctrl-F: page forward (vi)
             key_page_down();
             print_screen();
+            break;
+
+        case 'n':
+            do_search(_searchfwd);  // forward for last input _search
+            break;
+
+        case 'N':
+            do_search(!_searchfwd); // backward for last input _search
             break;
 
         case 0x0C:       // Ctrl-L (vi) refresh scren

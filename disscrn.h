@@ -100,7 +100,7 @@ public: // can't be private unless dispatch tables are moved into the class
     void do_cmd_cpu (char *p);  // handle "cpu"  command
     void do_cmd_defcpu(char *p);// handle "defcpu" command
     void do_cmd_tab (char *p);  // handle "tab"  command
-    void do_cmd_label(char *p);	// hanble "label" command
+    void do_cmd_label(char *p); // hanble "label" command
 
     void do_cmd_a();            // handle 'a' command
     void do_cmd_b();            // handle 'b' command
@@ -155,7 +155,7 @@ extern DisScrn scrn;
 
 
 // now for some command line string processing functions
-int GetWord(char *&s, char *word);     	// get a word from s, and make it upper-case
+int GetWord(char *&s, char *word);      // get a word from s, and make it upper-case
 int GetString(char *&s, char *word);    // get a string optionally delimited by quotes
 int ishex(char c);
 int HexVal(const char *hexStr);         // get value of a hex string

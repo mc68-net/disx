@@ -306,15 +306,37 @@ This produces the more readable:
 * Type `:wq⏎` to save and quit.
 
 
-Tutorial 3: Data Definitions
+Tutorial 3: RST Calls
+---------------------
+
+`disx` does not trace is RST calls: we need to disassemble those manually.
+(This is basically a bug or set of bugs in the disassembler; these will be
+fixed one day.)
+
+* Type `:0⏎` to go to go to the start of the file, then `/rst⏎` to search
+  for the first RST instruction. You will be brought to $03CA, an RST $10.
+
+* Type `^]` or `@` to discover that that this doesn't jump to the target of
+  RSTs. to the RST definition at $0010. So instead type `:10⏎` to get
+  there.
+
+* Type `t` to disassemble that routine. You'll notice it calls L14BD; that
+  was disassembled earlier because other things call it.
+
+Going through all the RSTs, you will find that only $08, $10 and $18 are
+used. Disassemble all three and the remaining bytes between them must be
+data.
+
+
+Tutorial 4: Data Definitions
 ----------------------------
 
 Let's start at the `MAIN` routine.
 
-* Type `/main:` to search for it. This will find it immedately because only
-  the definition will have the trailing colon. (Note that if you are
-  already on the only matching line, further attempts to search will give a
-  'not found' error.)
+* Type `/main:` (don't forget the colon!) to search for it. This will find
+  it immedately because only the definition will have the trailing colon.
+  (Note that if you are already on the only matching line, further attempts
+  to search will give a 'not found' error.)
 
 You will see:
 
@@ -326,7 +348,9 @@ You will see:
 Here we load DE with the value at `D049B` in memory; this automatically
 generated label starts with a `D` because it's accessed only as data, never
 executed (at least not directly in the way that the disassembler can see
-it). Let's go to it and see if we can format the data
+it). Let's go to it and see if we can format the data there.
+
+* type `xx`
 
 
 

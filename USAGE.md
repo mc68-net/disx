@@ -27,9 +27,10 @@ re-sort these at startup, writing them when the `:w` command is executed.
 - _binfile_`.sym`: Symbol names and addresses for symbols within the
   disassembly range.
 - _binfile_`.equ`: Symbol names and addresses for symbols outside the
-  disassembly range. This is never created by disx, but is read. These
-  symbols do not generate EQU definitions in assembly source and listing
-  files.
+  disassembly range, in the same format as the `.sym` file but with lower
+  case allowed. This is never created by disx, but is read. These symbols
+  are used in assembly source and listing files, too, but do not generate
+  EQU definitions.
 - _binfile_`.cmt`: Comments.
 
 Caveats:

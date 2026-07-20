@@ -28,6 +28,9 @@ etc.)
     :#⏎     go to address _#_ (hex)
      j  k   move down/up one line
     ˇ]  @   go to refaddr (target of current instruction)
+    ^T      return from 'go to refaddr
+     [  ]   go to previous/next label
+
      /  ?   start search forward/backward (type search string)
     /x:⏎    search for symbol definition (does not work for auto-labels)
      n  N   search again in previous or opposite of previous direction
@@ -39,6 +42,12 @@ etc.)
      ;      set/edit end-of-line comment for current line
      l      set label for current location
      L      set label for refaddr, the target of the current instruction
+     '      toggle label type for current location (none → data → code)
+     "      toggle label type refaddr (none → data → code)
+
+### XXX TODO
+
+- `U` for undo.
 
 
 Sample Project: SORD M5 Boot ROM Disassembly
@@ -324,11 +333,92 @@ fixed one day.)
   was disassembled earlier because other things call it.
 
 Going through all the RSTs, you will find that only $08, $10 and $18 are
-used. Disassemble all three and the remaining bytes between them must be
-data.
+called. Disassemble all three and the remaining bytes between them (and the
+$00 reset entrypoint) are probably data.
 
 
-Tutorial 4: Data Definitions
+Tutorial 4: Label Types
+-----------------------
+
+* type `:0⏎` to go to the start of the file and look forward. We have a
+  label `L0007` pointing to the second byte of the preceeding `JR`
+  instruction:
+
+        0006: 1850                  JR    L0058
+        0007:           L0007:      EQU   $-1
+
+Especially in very low areas of memory, this is typically a case of a
+constant being given a label.
+
+* Type `/l0007⏎` to search for the label, moving you down to the
+  definition, and type `n` to search for the next instance, taking you to
+  its use:
+
+      » 0DA1: 110700                LD    DE,L0007              «
+        0DA4: 01A040                LD    BC,40A0H
+        0DA7: CD860B                CALL  L0B86
+
+* Type `jj^]` to move down to it and follow it, so we can see what the call
+  does.
+
+It shows us a `LD (7227H),DE` instruction, so the DE argument above is
+clearly just to be loaded into that particular RAM location and the
+following one. Given the context, this is clearly just static data, nothing
+to do with what's at memory location $0007 (the offset of the JR
+instruction).
+
+* Return to the caller with `^T`. Type `kk` to move up two lines back to
+  the use of the `L0007` label.
+
+* Type `"` once to toggle the label type for the refaddr. This switches it
+  from 'code' to 'none,' removing the label and replacing it with a
+  literal: `0007H`. Try it three more times to loop from 'none' to 'data'
+  to 'code' back to 'none' again.
+
+* Type `:7⏎` to return to the label definition point. It actually takes you
+  to line 6; the label pointing into the second byte of that JR instruction
+  is gone.
+
+* Type `jj` to move down to the next label, `D0008:`.
+
+`D0008` is labelling the RST08 vector, but `RST 08H` calls don't use labels
+and the `D` at the front of this one means it's used only as a data
+reference. This is clearly also just a small constant being used in one or
+more locations. We can just directly remove this label:
+
+* Type `'` to change this line's label type to `L0008`, and type `'` once
+  more to change the label type to 'none', removing it.
+
+The two labels below are similar, and can be dealt with in the same way.
+But the third one has been disassembled to a data word: `D000E: DW 0E6C9H`.
+This is potentially a reference (though it seems unlikely), so we need to
+search forward for its uses. We find only one: `LD DE,D000E`, so we can
+safely remove that label too using any of the techniques above.
+
+The last label in the range of RSTs that is used is `D001C`. Searching for
+that brings us to an `LD BC,D001C` just before an `LDIR`, clearly a count,
+so we can remove that label as well.
+
+
+Tutorial 5: Label Definitions Outside Disassembly Range
+-------------------------------------------------------
+
+At location $0008, HL is loaded with a constant: `LD HL,7094H`. If you
+try to use the `L` command to set a label it will bring up the label
+editor on the top line, but entering a label name will not change the
+display, and if you exit and check the `.sym` file you'll notice that the
+symbol was never added there.
+
+To add symbols outside the disassembly range you need to create a `.equ`
+file, which has the same format as the `.sym` file: 4-digit hex address,
+space, label, then optional space and comment.
+
+For this case, create the new `int-jp.bin.equ` file and add a single line
+to it: `7094 ram_x0     loaded/read by RST 08`. When you start `disx` again
+you'll see that this label is now used everywhere.
+
+
+Tutorial X: Data Definitions
 ----------------------------
 
 Let's start at the `MAIN` routine.

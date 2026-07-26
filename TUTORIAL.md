@@ -303,14 +303,14 @@ the 8-character label needs 9 characters including its trailing colon.
 We'll reset the tabs to some better values and leave out the exclamation
 mark to indicate we want our assembly output to use spaces instead of tabs.
 
-* Type `:tabs 6 10 12 6 12⏎`.
+* Type `:tabs 6 10 12 5 15⏎`.
 
 This produces the more readable:
 
-      0001: ED5E                  IM    2           ; int vector: reg I*$100 + data...
+      0001: ED5E                  IM   2              ; int vector: reg I*$100 + data...
         … [many lines elided] …
-    » 0033: CD0D01    MAINLOOP:   CALL  MAIN                    «
-      0036: 18FB                  JR    MAINLOOP
+    » 0033: CD0D01    MAINLOOP:   CALL MAIN                    «
+      0036: 18FB                  JR   MAINLOOP
 
 * Type `:wq⏎` to save and quit.
 
